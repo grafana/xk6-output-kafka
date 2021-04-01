@@ -30,7 +30,6 @@ import (
 
 	"github.com/loadimpact/k6/output"
 	"github.com/loadimpact/k6/stats"
-	"github.com/loadimpact/k6/stats/influxdb"
 )
 
 // Collector implements the lib.Collector interface and should be used only for testing
@@ -117,19 +116,18 @@ func (c *Collector) formatSamples(samples stats.Samples) ([]string, error) {
 
 	switch c.Config.Format.String {
 	case "influxdb":
-		i, err := influxdb.New(c.logger, c.Config.InfluxDBConfig)
+		var err error
+		fieldKinds, err := makeInfluxdbFieldKinds(c.Config.InfluxDBConfig.TagsAsFields)
 		if err != nil {
 			return nil, err
 		}
-
-		metrics, err = i.Format(samples)
+		metrics, err = formatAsInfluxdbV1(c.logger, samples, newExtractTagsFields(fieldKinds))
 		if err != nil {
 			return nil, err
 		}
 	default:
 		for _, sample := range samples {
-			env := wrapSample(sample)
-			metric, err := json.Marshal(env)
+			metric, err := json.Marshal(wrapSample(sample))
 			if err != nil {
 				return nil, err
 			}

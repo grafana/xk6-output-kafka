@@ -10,14 +10,20 @@ To build a `k6` binary with this extension, first ensure you have the prerequisi
 - [Go toolchain](https://go101.org/article/go-toolchain.html)
 - Git
 
-Then:
+1. Build with `xk6`:
 
-1. Download `xk6`:
-  ```bash
-  $ go get -u github.com/k6io/xk6
-  ```
+```bash
+xk6 build --with github.com/k6io/xk6-output-kafka
+```
 
-2. Build the binary:
-  ```bash
-  $ xk6 build --with github.com/k6io/xk6-output-kafka
-  ```
+This will result in a `k6` binary in the current directory.
+
+2. Run with the just build `k6:
+
+```bash
+./k6 run -o xk6-kafka <script.js>
+```
+
+## Configuration
+
+The configuration is the same as the in k6 one. Please consult the [documentation](https://k6.io/docs/results-visualization/apache-kafka) for specifics.

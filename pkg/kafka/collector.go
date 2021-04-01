@@ -29,7 +29,6 @@ import (
 	"github.com/sirupsen/logrus"
 
 	"github.com/loadimpact/k6/output"
-	jsono "github.com/loadimpact/k6/output/json"
 	"github.com/loadimpact/k6/stats"
 	"github.com/loadimpact/k6/stats/influxdb"
 )
@@ -129,7 +128,7 @@ func (c *Collector) formatSamples(samples stats.Samples) ([]string, error) {
 		}
 	default:
 		for _, sample := range samples {
-			env := jsono.WrapSample(sample)
+			env := wrapSample(sample)
 			metric, err := json.Marshal(env)
 			if err != nil {
 				return nil, err

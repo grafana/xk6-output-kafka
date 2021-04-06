@@ -78,13 +78,15 @@ func (c Config) Apply(cfg Config) Config {
 	if cfg.PushInterval.Valid {
 		c.PushInterval = cfg.PushInterval
 	}
-	c.InfluxDBConfig = c.InfluxDBConfig.Apply(cfg.InfluxDBConfig)
+
+	c.InfluxDBConfig.Apply(cfg.InfluxDBConfig)
+
 	return c
 }
 
 // ParseArg takes an arg string and converts it to a config
 func ParseArg(arg string) (Config, error) {
-	c := Config{}
+	c := NewConfig()
 	params, err := strvals.Parse(arg)
 	if err != nil {
 		return c, err
@@ -99,8 +101,9 @@ func ParseArg(arg string) (Config, error) {
 		if err != nil {
 			return c, err
 		}
-		c.InfluxDBConfig = influxConfig
+		c.InfluxDBConfig.Apply(influxConfig)
 	}
+
 	delete(params, "influxdb")
 
 	if v, ok := params["push_interval"].(string); ok {

@@ -161,7 +161,7 @@ func checkDuplicatedTypeDefinitions(fieldKinds map[string]FieldKind, tag string)
 	return nil
 }
 
-func (c influxdbConfig) Apply(cfg influxdbConfig) influxdbConfig {
+func (c *influxdbConfig) Apply(cfg influxdbConfig) *influxdbConfig {
 	if len(cfg.TagsAsFields) > 0 {
 		c.TagsAsFields = cfg.TagsAsFields
 	}
@@ -170,11 +170,12 @@ func (c influxdbConfig) Apply(cfg influxdbConfig) influxdbConfig {
 
 // ParseMap parses a map[string]interface{} into a Config
 func influxdbParseMap(m map[string]interface{}) (influxdbConfig, error) {
-	c := influxdbConfig{}
+	c := newInfluxdbConfig()
 	if v, ok := m["tagsAsFields"].(string); ok {
 		m["tagsAsFields"] = []string{v}
 	}
 	dec, err := mapstructure.NewDecoder(&mapstructure.DecoderConfig{
+		ZeroFields: true,
 		DecodeHook: types.NullDecoder,
 		Result:     &c,
 	})

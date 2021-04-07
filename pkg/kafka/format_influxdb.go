@@ -161,7 +161,7 @@ func checkDuplicatedTypeDefinitions(fieldKinds map[string]FieldKind, tag string)
 	return nil
 }
 
-func (c *influxdbConfig) Apply(cfg influxdbConfig) *influxdbConfig {
+func (c influxdbConfig) Apply(cfg influxdbConfig) influxdbConfig {
 	if len(cfg.TagsAsFields) > 0 {
 		c.TagsAsFields = cfg.TagsAsFields
 	}

@@ -79,7 +79,7 @@ func (c Config) Apply(cfg Config) Config {
 		c.PushInterval = cfg.PushInterval
 	}
 
-	c.InfluxDBConfig.Apply(cfg.InfluxDBConfig)
+	c.InfluxDBConfig = c.InfluxDBConfig.Apply(cfg.InfluxDBConfig)
 
 	return c
 }
@@ -101,7 +101,7 @@ func ParseArg(arg string) (Config, error) {
 		if err != nil {
 			return c, err
 		}
-		c.InfluxDBConfig.Apply(influxConfig)
+		c.InfluxDBConfig = c.InfluxDBConfig.Apply(influxConfig)
 	}
 
 	delete(params, "influxdb")

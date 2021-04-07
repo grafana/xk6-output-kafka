@@ -170,12 +170,11 @@ func (c influxdbConfig) Apply(cfg influxdbConfig) influxdbConfig {
 
 // ParseMap parses a map[string]interface{} into a Config
 func influxdbParseMap(m map[string]interface{}) (influxdbConfig, error) {
-	c := newInfluxdbConfig()
+	c := influxdbConfig{}
 	if v, ok := m["tagsAsFields"].(string); ok {
 		m["tagsAsFields"] = []string{v}
 	}
 	dec, err := mapstructure.NewDecoder(&mapstructure.DecoderConfig{
-		ZeroFields: true,
 		DecodeHook: types.NullDecoder,
 		Result:     &c,
 	})

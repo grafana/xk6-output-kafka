@@ -35,7 +35,7 @@ import (
 
 func TestConfigParseArg(t *testing.T) {
 	c, err := ParseArg("brokers=broker1,topic=someTopic,format=influxdb")
-	expInfluxConfig := newInfluxdbConfig()
+	expInfluxConfig := influxdbConfig{}
 	assert.Nil(t, err)
 	assert.Equal(t, []string{"broker1"}, c.Brokers)
 	assert.Equal(t, null.StringFrom("someTopic"), c.Topic)

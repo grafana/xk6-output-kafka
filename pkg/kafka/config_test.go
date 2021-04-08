@@ -31,12 +31,11 @@ import (
 	"gopkg.in/guregu/null.v3"
 
 	"github.com/loadimpact/k6/lib/types"
-	"github.com/loadimpact/k6/stats/influxdb"
 )
 
 func TestConfigParseArg(t *testing.T) {
 	c, err := ParseArg("brokers=broker1,topic=someTopic,format=influxdb")
-	expInfluxConfig := influxdb.Config{}
+	expInfluxConfig := influxdbConfig{}
 	assert.Nil(t, err)
 	assert.Equal(t, []string{"broker1"}, c.Brokers)
 	assert.Equal(t, null.StringFrom("someTopic"), c.Topic)
@@ -50,7 +49,7 @@ func TestConfigParseArg(t *testing.T) {
 	assert.Equal(t, null.StringFrom("json"), c.Format)
 
 	c, err = ParseArg("brokers={broker2,broker3:9092},topic=someTopic,format=influxdb,influxdb.tagsAsFields=fake")
-	expInfluxConfig = influxdb.Config{
+	expInfluxConfig = influxdbConfig{
 		TagsAsFields: []string{"fake"},
 	}
 	assert.Nil(t, err)
@@ -60,7 +59,7 @@ func TestConfigParseArg(t *testing.T) {
 	assert.Equal(t, expInfluxConfig, c.InfluxDBConfig)
 
 	c, err = ParseArg("brokers={broker2,broker3:9092},topic=someTopic,format=influxdb,influxdb.tagsAsFields={fake,anotherFake}")
-	expInfluxConfig = influxdb.Config{
+	expInfluxConfig = influxdbConfig{
 		TagsAsFields: []string{"fake", "anotherFake"},
 	}
 	assert.Nil(t, err)
@@ -84,18 +83,7 @@ func TestConsolidatedConfig(t *testing.T) {
 			config: Config{
 				Format:         null.StringFrom("json"),
 				PushInterval:   types.NullDurationFrom(1 * time.Second),
-				InfluxDBConfig: influxdb.NewConfig(),
-			},
-		},
-		"bad influxdb concurrent writes": {
-			env: map[string]string{"K6_INFLUXDB_CONCURRENT_WRITES": "-2"},
-			config: Config{
-				Format:       null.StringFrom("json"),
-				PushInterval: types.NullDurationFrom(1 * time.Second),
-				InfluxDBConfig: influxdb.NewConfig().Apply(
-					influxdb.Config{
-						ConcurrentWrites: null.IntFrom(-2),
-					}),
+				InfluxDBConfig: newInfluxdbConfig(),
 			},
 		},
 	}

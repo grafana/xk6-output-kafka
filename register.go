@@ -2,7 +2,7 @@ package kafka
 
 import (
 	"github.com/k6io/xk6-output-kafka/pkg/kafka"
-	"github.com/loadimpact/k6/output"
+	"go.k6.io/k6/output"
 )
 
 func init() {

@@ -1,5 +1,5 @@
 # xk6-output-kafka
-Is extracted the original [kafka output](https://k6.io/docs/results-visualization/apache-kafka) from [k6](https://github.com/loadimpact/k6) so it can be used with [xk6](https://github.com/k6io/xk6).
+Is extracted the original [kafka output](https://k6.io/docs/results-visualization/apache-kafka) from [k6](https://github.com/k6io/k6) so it can be used with [xk6](https://github.com/k6io/xk6).
 
 </div>
 

@@ -21,6 +21,7 @@
 package kafka
 
 import (
+	"crypto/tls"
 	"encoding/json"
 	"sync"
 	"time"
@@ -51,7 +52,35 @@ func New(p output.Params) (*Collector, error) {
 	if err != nil {
 		return nil, err
 	}
-	producer, err := sarama.NewSyncProducer(conf.Brokers, nil)
+
+	saramaConfig := sarama.NewConfig()
+
+	if conf.AuthMechanism.String != "none" {
+		saramaConfig.Net.SASL.Enable = true
+		saramaConfig.Net.SASL.Handshake = true
+		saramaConfig.Net.SASL.User = conf.User.String
+		saramaConfig.Net.SASL.Password = conf.Password.String
+		saramaConfig.Net.TLS.Enable = true
+		saramaConfig.Net.TLS.Config = &tls.Config{
+			InsecureSkipVerify: true,
+			ClientAuth:         0,
+		}
+		switch conf.AuthMechanism.String {
+		case "plain":
+			saramaConfig.Net.SASL.Mechanism = sarama.SASLTypePlaintext
+		case "scram-sha-512":
+			saramaConfig.Net.SASL.Mechanism = sarama.SASLTypeSCRAMSHA512
+			saramaConfig.Net.SASL.SCRAMClientGeneratorFunc = func() sarama.SCRAMClient { return &XDGSCRAMClient{HashGeneratorFcn: SHA512} }
+		case "scram-sha-256":
+			saramaConfig.Net.SASL.Mechanism = sarama.SASLTypeSCRAMSHA256
+			saramaConfig.Net.SASL.SCRAMClientGeneratorFunc = func() sarama.SCRAMClient { return &XDGSCRAMClient{HashGeneratorFcn: SHA256} }
+		}
+	}
+
+	saramaConfig.Producer.Return.Successes = true
+
+	producer, err := sarama.NewSyncProducer(conf.Brokers, saramaConfig)
+
 	if err != nil {
 		return nil, err
 	}

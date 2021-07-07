@@ -23,6 +23,7 @@ package kafka
 import (
 	"crypto/tls"
 	"encoding/json"
+	"errors"
 	"sync"
 	"time"
 
@@ -74,6 +75,8 @@ func New(p output.Params) (*Collector, error) {
 		case "scram-sha-256":
 			saramaConfig.Net.SASL.Mechanism = sarama.SASLTypeSCRAMSHA256
 			saramaConfig.Net.SASL.SCRAMClientGeneratorFunc = func() sarama.SCRAMClient { return &XDGSCRAMClient{HashGeneratorFcn: SHA256} }
+		default:
+			return nil, errors.New("invalid auth mechanism for kafka SASL")
 		}
 	}
 

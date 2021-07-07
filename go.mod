@@ -11,6 +11,6 @@ require (
 	github.com/sirupsen/logrus v1.8.1
 	github.com/stretchr/testify v1.7.0
 	github.com/xdg/scram v1.0.3
-	go.k6.io/k6 v0.33.1-0.20210701133132-aa1fd6a389c9
+	go.k6.io/k6 v0.33.0
 	gopkg.in/guregu/null.v3 v3.3.0
 )

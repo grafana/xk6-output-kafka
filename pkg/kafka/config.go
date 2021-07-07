@@ -22,6 +22,7 @@ package kafka
 
 import (
 	"encoding/json"
+	"errors"
 	"time"
 
 	"github.com/kelseyhightower/envconfig"
@@ -85,9 +86,13 @@ func (c Config) Apply(cfg Config) Config {
 	if cfg.PushInterval.Valid {
 		c.PushInterval = cfg.PushInterval
 	}
-	if cfg.AuthMechanism != null.StringFrom("none") && cfg.User.Valid && cfg.Password.Valid {
+	if cfg.AuthMechanism.Valid {
 		c.AuthMechanism = cfg.AuthMechanism
+	}
+	if cfg.User.Valid {
 		c.User = cfg.User
+	}
+	if cfg.Password.Valid {
 		c.Password = cfg.Password
 	}
 	c.InfluxDBConfig = c.InfluxDBConfig.Apply(cfg.InfluxDBConfig)
@@ -152,6 +157,10 @@ func GetConsolidatedConfig(jsonRawConf json.RawMessage, env map[string]string, a
 	if err := envconfig.Process("", &envConfig); err != nil {
 		// TODO: get rid of envconfig and actually use the env parameter...
 		return result, err
+	}
+
+	if envConfig.AuthMechanism.String != "none" && !envConfig.User.Valid && !envConfig.Password.Valid {
+		return result, errors.New("user and password are required when auth mechanism is provided")
 	}
 
 	result = result.Apply(envConfig)

@@ -159,7 +159,7 @@ func GetConsolidatedConfig(jsonRawConf json.RawMessage, env map[string]string, a
 		return result, err
 	}
 
-	if envConfig.AuthMechanism.String != "none" && !envConfig.User.Valid && !envConfig.Password.Valid {
+	if envConfig.AuthMechanism.String != "none" && (!envConfig.User.Valid || !envConfig.Password.Valid) {
 		return result, errors.New("user and password are required when auth mechanism is provided")
 	}
 

@@ -80,11 +80,68 @@ func TestConsolidatedConfig(t *testing.T) {
 		err     string
 	}{
 		"default": {
+			env: map[string]string{
+				"K6_KAFKA_AUTH_MECHANISM": "none",
+			},
 			config: Config{
 				Format:         null.StringFrom("json"),
 				PushInterval:   types.NullDurationFrom(1 * time.Second),
 				InfluxDBConfig: newInfluxdbConfig(),
+				AuthMechanism:  null.StringFrom("none"),
 			},
+		},
+		"auth": {
+			env: map[string]string{
+				"K6_KAFKA_AUTH_MECHANISM": "scram-sha-512",
+				"K6_KAFKA_SASL_PASSWORD":  "password123",
+				"K6_KAFKA_SASL_USER":      "testuser",
+			},
+			config: Config{
+				Format:         null.StringFrom("json"),
+				PushInterval:   types.NullDurationFrom(1 * time.Second),
+				InfluxDBConfig: newInfluxdbConfig(),
+				AuthMechanism:  null.StringFrom("scram-sha-512"),
+				Password:       null.StringFrom("password123"),
+				User:           null.StringFrom("testuser"),
+			},
+		},
+		"auth-missing-credentials": {
+			env: map[string]string{
+				"K6_KAFKA_AUTH_MECHANISM": "scram-sha-512",
+			},
+			config: Config{
+				Format:         null.StringFrom("json"),
+				PushInterval:   types.NullDurationFrom(1 * time.Second),
+				InfluxDBConfig: newInfluxdbConfig(),
+				AuthMechanism:  null.StringFrom("scram-sha-512"),
+			},
+			err: "user and password are required when auth mechanism is provided",
+		},
+		"auth-missing-user": {
+			env: map[string]string{
+				"K6_KAFKA_AUTH_MECHANISM": "scram-sha-512",
+				"K6_KAFKA_SASL_PASSWORD":  "password123",
+			},
+			config: Config{
+				Format:         null.StringFrom("json"),
+				PushInterval:   types.NullDurationFrom(1 * time.Second),
+				InfluxDBConfig: newInfluxdbConfig(),
+				AuthMechanism:  null.StringFrom("scram-sha-512"),
+			},
+			err: "user and password are required when auth mechanism is provided",
+		},
+		"auth-missing-password": {
+			env: map[string]string{
+				"K6_KAFKA_AUTH_MECHANISM": "scram-sha-512",
+				"K6_KAFKA_SASL_USER":      "testuser",
+			},
+			config: Config{
+				Format:         null.StringFrom("json"),
+				PushInterval:   types.NullDurationFrom(1 * time.Second),
+				InfluxDBConfig: newInfluxdbConfig(),
+				AuthMechanism:  null.StringFrom("scram-sha-512"),
+			},
+			err: "user and password are required when auth mechanism is provided",
 		},
 	}
 

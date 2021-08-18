@@ -23,6 +23,7 @@ package kafka
 import (
 	"encoding/json"
 	"fmt"
+	"os"
 	"testing"
 
 	"github.com/Shopify/sarama"
@@ -43,9 +44,11 @@ func TestRun(t *testing.T) {
 	seedMeta.AddTopicPartition("my_topic", 0, 1, []int32{}, []int32{}, []int32{}, sarama.ErrNoError)
 	broker.Returns(seedMeta)
 
+	os.Clearenv()
+
 	c, err := New(output.Params{
 		Logger:     testutils.NewLogger(t),
-		JSONConfig: json.RawMessage(fmt.Sprintf(`{"brokers":[%q], "topic": "my_topic"}`, broker.Addr())),
+		JSONConfig: json.RawMessage(fmt.Sprintf(`{"brokers":[%q], "topic": "my_topic", "version": "0.8.2.0"}`, broker.Addr())),
 	})
 
 	require.NoError(t, err)

@@ -25,6 +25,7 @@ import (
 	"errors"
 	"time"
 
+	"github.com/Shopify/sarama"
 	"github.com/kelseyhightower/envconfig"
 	"github.com/kubernetes/helm/pkg/strvals"
 	"github.com/mitchellh/mapstructure"
@@ -45,6 +46,7 @@ type Config struct {
 	AuthMechanism null.String        `json:"auth_mechanism" envconfig:"K6_KAFKA_AUTH_MECHANISM"`
 	Format        null.String        `json:"format" envconfig:"K6_KAFKA_FORMAT"`
 	PushInterval  types.NullDuration `json:"push_interval" envconfig:"K6_KAFKA_PUSH_INTERVAL"`
+	Version       null.String        `json:"version" envconfig:"K6_KAFKA_VERSION"`
 
 	InfluxDBConfig influxdbConfig `json:"influxdb"`
 }
@@ -61,6 +63,7 @@ type config struct {
 	AuthMechanism null.String `json:"auth_mechanism" mapstructure:"auth_mechanism" envconfig:"K6_KAFKA_AUTH_MECHANISM"`
 
 	InfluxDBConfig influxdbConfig `json:"influxdb" mapstructure:"influxdb"`
+	Version        string         `json:"version" mapstructure:"version"`
 }
 
 // NewConfig creates a new Config instance with default values for some fields.
@@ -70,6 +73,7 @@ func NewConfig() Config {
 		PushInterval:   types.NullDurationFrom(1 * time.Second),
 		InfluxDBConfig: newInfluxdbConfig(),
 		AuthMechanism:  null.StringFrom("none"),
+		Version:        null.StringFrom(sarama.DefaultVersion.String()),
 	}
 }
 
@@ -94,6 +98,9 @@ func (c Config) Apply(cfg Config) Config {
 	}
 	if cfg.Password.Valid {
 		c.Password = cfg.Password
+	}
+	if cfg.Version.Valid {
+		c.Version = cfg.Version
 	}
 	c.InfluxDBConfig = c.InfluxDBConfig.Apply(cfg.InfluxDBConfig)
 	return c
@@ -128,6 +135,10 @@ func ParseArg(arg string) (Config, error) {
 		}
 	}
 
+	if v, ok := params["version"].(string); ok {
+		c.Version = null.StringFrom(v)
+	}
+
 	var cfg config
 	err = mapstructure.Decode(params, &cfg)
 	if err != nil {
@@ -159,11 +170,11 @@ func GetConsolidatedConfig(jsonRawConf json.RawMessage, env map[string]string, a
 		return result, err
 	}
 
-	if envConfig.AuthMechanism.String != "none" && (!envConfig.User.Valid || !envConfig.Password.Valid) {
+	result = result.Apply(envConfig)
+
+	if result.AuthMechanism.String != "none" && (!result.User.Valid || !result.Password.Valid) {
 		return result, errors.New("user and password are required when auth mechanism is provided")
 	}
-
-	result = result.Apply(envConfig)
 
 	if arg != "" {
 		urlConf, err := ParseArg(arg)

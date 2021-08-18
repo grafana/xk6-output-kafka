@@ -81,6 +81,13 @@ func New(p output.Params) (*Collector, error) {
 	}
 
 	saramaConfig.Producer.Return.Successes = true
+	version, err := sarama.ParseKafkaVersion(conf.Version.String)
+
+	if err != nil {
+		return nil, err
+	}
+
+	saramaConfig.Version = version
 
 	producer, err := sarama.NewSyncProducer(conf.Brokers, saramaConfig)
 
@@ -101,8 +108,10 @@ func (c *Collector) Description() string {
 }
 
 func (c *Collector) Stop() error {
-	c.done <- struct{}{}
-	<-c.done
+	go func() {
+		c.done <- struct{}{}
+		<-c.done
+	}()
 	return nil
 }
 

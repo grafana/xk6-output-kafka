@@ -26,6 +26,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/Shopify/sarama"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"gopkg.in/guregu/null.v3"
@@ -88,6 +89,7 @@ func TestConsolidatedConfig(t *testing.T) {
 				PushInterval:   types.NullDurationFrom(1 * time.Second),
 				InfluxDBConfig: newInfluxdbConfig(),
 				AuthMechanism:  null.StringFrom("none"),
+				Version:        null.StringFrom(sarama.DefaultVersion.String()),
 			},
 		},
 		"auth": {
@@ -103,6 +105,7 @@ func TestConsolidatedConfig(t *testing.T) {
 				AuthMechanism:  null.StringFrom("scram-sha-512"),
 				Password:       null.StringFrom("password123"),
 				User:           null.StringFrom("testuser"),
+				Version:        null.StringFrom(sarama.DefaultVersion.String()),
 			},
 		},
 		"auth-missing-credentials": {
@@ -114,6 +117,7 @@ func TestConsolidatedConfig(t *testing.T) {
 				PushInterval:   types.NullDurationFrom(1 * time.Second),
 				InfluxDBConfig: newInfluxdbConfig(),
 				AuthMechanism:  null.StringFrom("scram-sha-512"),
+				Version:        null.StringFrom(sarama.DefaultVersion.String()),
 			},
 			err: "user and password are required when auth mechanism is provided",
 		},
@@ -127,6 +131,7 @@ func TestConsolidatedConfig(t *testing.T) {
 				PushInterval:   types.NullDurationFrom(1 * time.Second),
 				InfluxDBConfig: newInfluxdbConfig(),
 				AuthMechanism:  null.StringFrom("scram-sha-512"),
+				Version:        null.StringFrom(sarama.DefaultVersion.String()),
 			},
 			err: "user and password are required when auth mechanism is provided",
 		},
@@ -140,6 +145,7 @@ func TestConsolidatedConfig(t *testing.T) {
 				PushInterval:   types.NullDurationFrom(1 * time.Second),
 				InfluxDBConfig: newInfluxdbConfig(),
 				AuthMechanism:  null.StringFrom("scram-sha-512"),
+				Version:        null.StringFrom(sarama.DefaultVersion.String()),
 			},
 			err: "user and password are required when auth mechanism is provided",
 		},

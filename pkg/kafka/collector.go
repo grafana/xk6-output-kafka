@@ -108,10 +108,9 @@ func (c *Collector) Description() string {
 }
 
 func (c *Collector) Stop() error {
-	go func() {
-		c.done <- struct{}{}
-		<-c.done
-	}()
+
+	c.done <- struct{}{}
+	<-c.done
 	return nil
 }
 

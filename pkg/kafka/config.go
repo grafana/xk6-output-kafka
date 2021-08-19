@@ -54,13 +54,13 @@ type Config struct {
 // config is a duplicate of ConfigFields as we can not mapstructure.Decode into
 // null types so we duplicate the struct with primitive types to Decode into
 type config struct {
-	Brokers       []string    `json:"brokers" mapstructure:"brokers" envconfig:"K6_KAFKA_BROKERS"`
-	Topic         string      `json:"topic" mapstructure:"topic" envconfig:"K6_KAFKA_TOPIC"`
-	Format        string      `json:"format" mapstructure:"format" envconfig:"K6_KAFKA_FORMAT"`
-	PushInterval  string      `json:"push_interval" mapstructure:"push_interval" envconfig:"K6_KAFKA_PUSH_INTERVAL"`
-	User          null.String `json:"user" mapstructure:"user" envconfig:"K6_KAFKA_SASL_USER"`
-	Password      null.String `json:"password" mapstructure:"password" envconfig:"K6_KAFKA_SASL_PASSWORD"`
-	AuthMechanism null.String `json:"auth_mechanism" mapstructure:"auth_mechanism" envconfig:"K6_KAFKA_AUTH_MECHANISM"`
+	Brokers       []string `json:"brokers" mapstructure:"brokers" envconfig:"K6_KAFKA_BROKERS"`
+	Topic         string   `json:"topic" mapstructure:"topic" envconfig:"K6_KAFKA_TOPIC"`
+	Format        string   `json:"format" mapstructure:"format" envconfig:"K6_KAFKA_FORMAT"`
+	PushInterval  string   `json:"push_interval" mapstructure:"push_interval" envconfig:"K6_KAFKA_PUSH_INTERVAL"`
+	User          string   `json:"user" mapstructure:"user" envconfig:"K6_KAFKA_SASL_USER"`
+	Password      string   `json:"password" mapstructure:"password" envconfig:"K6_KAFKA_SASL_PASSWORD"`
+	AuthMechanism string   `json:"auth_mechanism" mapstructure:"auth_mechanism" envconfig:"K6_KAFKA_AUTH_MECHANISM"`
 
 	InfluxDBConfig influxdbConfig `json:"influxdb" mapstructure:"influxdb"`
 	Version        string         `json:"version" mapstructure:"version"`

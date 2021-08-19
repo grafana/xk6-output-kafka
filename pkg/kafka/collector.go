@@ -111,6 +111,11 @@ func (c *Collector) Stop() error {
 
 	c.done <- struct{}{}
 	<-c.done
+
+	err := c.Producer.Close()
+	if err != nil {
+		c.logger.WithError(err).Error("Kafka: Failed to close producer.")
+	}
 	return nil
 }
 
@@ -118,17 +123,13 @@ func (c *Collector) Start() error {
 	c.logger.Debug("Kafka: starting!")
 	go func() {
 		ticker := time.NewTicker(time.Duration(c.Config.PushInterval.Duration))
+		defer ticker.Stop()
 		for {
 			select {
 			case <-ticker.C:
 				c.pushMetrics()
 			case <-c.done:
 				c.pushMetrics()
-
-				err := c.Producer.Close()
-				if err != nil {
-					c.logger.WithError(err).Error("Kafka: Failed to close producer.")
-				}
 				close(c.done)
 				return
 			}

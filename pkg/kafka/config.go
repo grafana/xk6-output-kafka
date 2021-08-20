@@ -47,6 +47,7 @@ type Config struct {
 	Format        null.String        `json:"format" envconfig:"K6_KAFKA_FORMAT"`
 	PushInterval  types.NullDuration `json:"push_interval" envconfig:"K6_KAFKA_PUSH_INTERVAL"`
 	Version       null.String        `json:"version" envconfig:"K6_KAFKA_VERSION"`
+	SSL           bool               `json:"ssl" envconfig:"K6_KAFKA_SSL"`
 
 	InfluxDBConfig influxdbConfig `json:"influxdb"`
 }
@@ -64,6 +65,7 @@ type config struct {
 
 	InfluxDBConfig influxdbConfig `json:"influxdb" mapstructure:"influxdb"`
 	Version        string         `json:"version" mapstructure:"version"`
+	SSL            bool           `json:"ssl" mapstructure:"ssl"`
 }
 
 // NewConfig creates a new Config instance with default values for some fields.
@@ -74,6 +76,7 @@ func NewConfig() Config {
 		InfluxDBConfig: newInfluxdbConfig(),
 		AuthMechanism:  null.StringFrom("none"),
 		Version:        null.StringFrom(sarama.DefaultVersion.String()),
+		SSL:            false,
 	}
 }
 
@@ -101,6 +104,9 @@ func (c Config) Apply(cfg Config) Config {
 	}
 	if cfg.Version.Valid {
 		c.Version = cfg.Version
+	}
+	if cfg.SSL {
+		c.SSL = cfg.SSL
 	}
 	c.InfluxDBConfig = c.InfluxDBConfig.Apply(cfg.InfluxDBConfig)
 	return c
@@ -137,6 +143,22 @@ func ParseArg(arg string) (Config, error) {
 
 	if v, ok := params["version"].(string); ok {
 		c.Version = null.StringFrom(v)
+	}
+
+	if v, ok := params["ssl"].(bool); ok {
+		c.SSL = v
+	}
+
+	if v, ok := params["auth_mechanism"].(string); ok {
+		c.AuthMechanism = null.StringFrom(v)
+	}
+
+	if v, ok := params["user"].(string); ok {
+		c.User = null.StringFrom(v)
+	}
+
+	if v, ok := params["password"].(string); ok {
+		c.Password = null.StringFrom(v)
 	}
 
 	var cfg config

@@ -61,11 +61,15 @@ func New(p output.Params) (*Collector, error) {
 		saramaConfig.Net.SASL.Handshake = true
 		saramaConfig.Net.SASL.User = conf.User.String
 		saramaConfig.Net.SASL.Password = conf.Password.String
-		saramaConfig.Net.TLS.Enable = true
-		saramaConfig.Net.TLS.Config = &tls.Config{
-			InsecureSkipVerify: true,
-			ClientAuth:         0,
+
+		if conf.SSL {
+			saramaConfig.Net.TLS.Enable = true
+			saramaConfig.Net.TLS.Config = &tls.Config{
+				InsecureSkipVerify: true,
+				ClientAuth:         0,
+			}
 		}
+
 		switch conf.AuthMechanism.String {
 		case "plain":
 			saramaConfig.Net.SASL.Mechanism = sarama.SASLTypePlaintext

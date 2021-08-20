@@ -68,6 +68,36 @@ func TestConfigParseArg(t *testing.T) {
 	assert.Equal(t, null.StringFrom("someTopic"), c.Topic)
 	assert.Equal(t, null.StringFrom("influxdb"), c.Format)
 	assert.Equal(t, expInfluxConfig, c.InfluxDBConfig)
+
+	c, err = ParseArg("brokers={broker2,broker3:9092},topic=someTopic,format=json,auth_mechanism=SASL_PLAINTEXT,user=johndoe,password=123password")
+	assert.Nil(t, err)
+	assert.Equal(t, []string{"broker2", "broker3:9092"}, c.Brokers)
+	assert.Equal(t, null.StringFrom("someTopic"), c.Topic)
+	assert.Equal(t, null.StringFrom("json"), c.Format)
+	assert.Equal(t, null.StringFrom("SASL_PLAINTEXT"), c.AuthMechanism)
+	assert.Equal(t, null.StringFrom("johndoe"), c.User)
+	assert.Equal(t, null.StringFrom("123password"), c.Password)
+	assert.Equal(t, false, c.SSL)
+
+	c, err = ParseArg("brokers={broker2,broker3:9092},topic=someTopic,format=json,auth_mechanism=SASL_PLAINTEXT,user=johndoe,password=123password,ssl=false")
+	assert.Nil(t, err)
+	assert.Equal(t, []string{"broker2", "broker3:9092"}, c.Brokers)
+	assert.Equal(t, null.StringFrom("someTopic"), c.Topic)
+	assert.Equal(t, null.StringFrom("json"), c.Format)
+	assert.Equal(t, null.StringFrom("SASL_PLAINTEXT"), c.AuthMechanism)
+	assert.Equal(t, null.StringFrom("johndoe"), c.User)
+	assert.Equal(t, null.StringFrom("123password"), c.Password)
+	assert.Equal(t, false, c.SSL)
+
+	c, err = ParseArg("brokers={broker2,broker3:9092},topic=someTopic,format=json,auth_mechanism=SASL_PLAINTEXT,user=johndoe,password=123password,ssl=true")
+	assert.Nil(t, err)
+	assert.Equal(t, []string{"broker2", "broker3:9092"}, c.Brokers)
+	assert.Equal(t, null.StringFrom("someTopic"), c.Topic)
+	assert.Equal(t, null.StringFrom("json"), c.Format)
+	assert.Equal(t, null.StringFrom("SASL_PLAINTEXT"), c.AuthMechanism)
+	assert.Equal(t, null.StringFrom("johndoe"), c.User)
+	assert.Equal(t, null.StringFrom("123password"), c.Password)
+	assert.Equal(t, true, c.SSL)
 }
 
 func TestConsolidatedConfig(t *testing.T) {

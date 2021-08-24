@@ -65,9 +65,9 @@ func New(p output.Params) (*Collector, error) {
 		if conf.SSL {
 			saramaConfig.Net.TLS.Enable = true
 			saramaConfig.Net.TLS.Config = &tls.Config{
-				InsecureSkipVerify: true,
-				ClientAuth:         0,
+				InsecureSkipVerify: conf.SkipCertVerify,
 			}
+
 		}
 
 		switch conf.AuthMechanism.String {

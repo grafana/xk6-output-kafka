@@ -40,14 +40,15 @@ type Config struct {
 	Brokers []string `json:"brokers" envconfig:"K6_KAFKA_BROKERS"`
 
 	// Samples.
-	Topic         null.String        `json:"topic" envconfig:"K6_KAFKA_TOPIC"`
-	User          null.String        `json:"user" envconfig:"K6_KAFKA_SASL_USER"`
-	Password      null.String        `json:"password" envconfig:"K6_KAFKA_SASL_PASSWORD"`
-	AuthMechanism null.String        `json:"auth_mechanism" envconfig:"K6_KAFKA_AUTH_MECHANISM"`
-	Format        null.String        `json:"format" envconfig:"K6_KAFKA_FORMAT"`
-	PushInterval  types.NullDuration `json:"push_interval" envconfig:"K6_KAFKA_PUSH_INTERVAL"`
-	Version       null.String        `json:"version" envconfig:"K6_KAFKA_VERSION"`
-	SSL           bool               `json:"ssl" envconfig:"K6_KAFKA_SSL"`
+	Topic          null.String        `json:"topic" envconfig:"K6_KAFKA_TOPIC"`
+	User           null.String        `json:"user" envconfig:"K6_KAFKA_SASL_USER"`
+	Password       null.String        `json:"password" envconfig:"K6_KAFKA_SASL_PASSWORD"`
+	AuthMechanism  null.String        `json:"auth_mechanism" envconfig:"K6_KAFKA_AUTH_MECHANISM"`
+	Format         null.String        `json:"format" envconfig:"K6_KAFKA_FORMAT"`
+	PushInterval   types.NullDuration `json:"push_interval" envconfig:"K6_KAFKA_PUSH_INTERVAL"`
+	Version        null.String        `json:"version" envconfig:"K6_KAFKA_VERSION"`
+	SSL            bool               `json:"ssl" envconfig:"K6_KAFKA_SSL"`
+	SkipCertVerify bool               `json:"skip_cert_verify" envconfig:"K6_KAFKA_SKIP_CERT_VERIFY"`
 
 	InfluxDBConfig influxdbConfig `json:"influxdb"`
 }
@@ -66,6 +67,7 @@ type config struct {
 	InfluxDBConfig influxdbConfig `json:"influxdb" mapstructure:"influxdb"`
 	Version        string         `json:"version" mapstructure:"version"`
 	SSL            bool           `json:"ssl" mapstructure:"ssl"`
+	SkipCertVerify bool           `json:"skip_cert_verify" mapstructure:"skip_cert_verify"`
 }
 
 // NewConfig creates a new Config instance with default values for some fields.
@@ -77,6 +79,7 @@ func NewConfig() Config {
 		AuthMechanism:  null.StringFrom("none"),
 		Version:        null.StringFrom(sarama.DefaultVersion.String()),
 		SSL:            false,
+		SkipCertVerify: false,
 	}
 }
 
@@ -108,6 +111,11 @@ func (c Config) Apply(cfg Config) Config {
 	if cfg.SSL {
 		c.SSL = cfg.SSL
 	}
+
+	if c.SkipCertVerify {
+		c.SkipCertVerify = cfg.SkipCertVerify
+	}
+
 	c.InfluxDBConfig = c.InfluxDBConfig.Apply(cfg.InfluxDBConfig)
 	return c
 }
@@ -147,6 +155,10 @@ func ParseArg(arg string) (Config, error) {
 
 	if v, ok := params["ssl"].(bool); ok {
 		c.SSL = v
+	}
+
+	if v, ok := params["skip_cert_verify"].(bool); ok {
+		c.SkipCertVerify = v
 	}
 
 	if v, ok := params["auth_mechanism"].(string); ok {

@@ -21,7 +21,9 @@
 package kafka
 
 import (
+	"crypto/tls"
 	"encoding/json"
+	"errors"
 	"sync"
 	"time"
 
@@ -51,7 +53,48 @@ func New(p output.Params) (*Collector, error) {
 	if err != nil {
 		return nil, err
 	}
-	producer, err := sarama.NewSyncProducer(conf.Brokers, nil)
+
+	saramaConfig := sarama.NewConfig()
+
+	if conf.AuthMechanism.String != "none" {
+		saramaConfig.Net.SASL.Enable = true
+		saramaConfig.Net.SASL.Handshake = true
+		saramaConfig.Net.SASL.User = conf.User.String
+		saramaConfig.Net.SASL.Password = conf.Password.String
+
+		if conf.SSL {
+			saramaConfig.Net.TLS.Enable = true
+			saramaConfig.Net.TLS.Config = &tls.Config{
+				InsecureSkipVerify: conf.Insecure,
+			}
+
+		}
+
+		switch conf.AuthMechanism.String {
+		case "plain":
+			saramaConfig.Net.SASL.Mechanism = sarama.SASLTypePlaintext
+		case "scram-sha-512":
+			saramaConfig.Net.SASL.Mechanism = sarama.SASLTypeSCRAMSHA512
+			saramaConfig.Net.SASL.SCRAMClientGeneratorFunc = func() sarama.SCRAMClient { return &xDGSCRAMClient{HashGeneratorFcn: SHA512} }
+		case "scram-sha-256":
+			saramaConfig.Net.SASL.Mechanism = sarama.SASLTypeSCRAMSHA256
+			saramaConfig.Net.SASL.SCRAMClientGeneratorFunc = func() sarama.SCRAMClient { return &xDGSCRAMClient{HashGeneratorFcn: SHA256} }
+		default:
+			return nil, errors.New("invalid auth mechanism for kafka SASL")
+		}
+	}
+
+	saramaConfig.Producer.Return.Successes = true
+	version, err := sarama.ParseKafkaVersion(conf.Version.String)
+
+	if err != nil {
+		return nil, err
+	}
+
+	saramaConfig.Version = version
+
+	producer, err := sarama.NewSyncProducer(conf.Brokers, saramaConfig)
+
 	if err != nil {
 		return nil, err
 	}
@@ -71,6 +114,11 @@ func (c *Collector) Description() string {
 func (c *Collector) Stop() error {
 	c.done <- struct{}{}
 	<-c.done
+
+	err := c.Producer.Close()
+	if err != nil {
+		c.logger.WithError(err).Error("Kafka: Failed to close producer.")
+	}
 	return nil
 }
 
@@ -78,17 +126,13 @@ func (c *Collector) Start() error {
 	c.logger.Debug("Kafka: starting!")
 	go func() {
 		ticker := time.NewTicker(time.Duration(c.Config.PushInterval.Duration))
+		defer ticker.Stop()
 		for {
 			select {
 			case <-ticker.C:
 				c.pushMetrics()
 			case <-c.done:
 				c.pushMetrics()
-
-				err := c.Producer.Close()
-				if err != nil {
-					c.logger.WithError(err).Error("Kafka: Failed to close producer.")
-				}
 				close(c.done)
 				return
 			}

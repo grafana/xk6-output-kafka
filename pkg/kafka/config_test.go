@@ -26,6 +26,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/Shopify/sarama"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"gopkg.in/guregu/null.v3"
@@ -67,6 +68,36 @@ func TestConfigParseArg(t *testing.T) {
 	assert.Equal(t, null.StringFrom("someTopic"), c.Topic)
 	assert.Equal(t, null.StringFrom("influxdb"), c.Format)
 	assert.Equal(t, expInfluxConfig, c.InfluxDBConfig)
+
+	c, err = ParseArg("brokers={broker2,broker3:9092},topic=someTopic,format=json,auth_mechanism=SASL_PLAINTEXT,user=johndoe,password=123password")
+	assert.Nil(t, err)
+	assert.Equal(t, []string{"broker2", "broker3:9092"}, c.Brokers)
+	assert.Equal(t, null.StringFrom("someTopic"), c.Topic)
+	assert.Equal(t, null.StringFrom("json"), c.Format)
+	assert.Equal(t, null.StringFrom("SASL_PLAINTEXT"), c.AuthMechanism)
+	assert.Equal(t, null.StringFrom("johndoe"), c.User)
+	assert.Equal(t, null.StringFrom("123password"), c.Password)
+	assert.Equal(t, false, c.SSL)
+
+	c, err = ParseArg("brokers={broker2,broker3:9092},topic=someTopic,format=json,auth_mechanism=SASL_PLAINTEXT,user=johndoe,password=123password,ssl=false")
+	assert.Nil(t, err)
+	assert.Equal(t, []string{"broker2", "broker3:9092"}, c.Brokers)
+	assert.Equal(t, null.StringFrom("someTopic"), c.Topic)
+	assert.Equal(t, null.StringFrom("json"), c.Format)
+	assert.Equal(t, null.StringFrom("SASL_PLAINTEXT"), c.AuthMechanism)
+	assert.Equal(t, null.StringFrom("johndoe"), c.User)
+	assert.Equal(t, null.StringFrom("123password"), c.Password)
+	assert.Equal(t, false, c.SSL)
+
+	c, err = ParseArg("brokers={broker2,broker3:9092},topic=someTopic,format=json,auth_mechanism=SASL_PLAINTEXT,user=johndoe,password=123password,ssl=true")
+	assert.Nil(t, err)
+	assert.Equal(t, []string{"broker2", "broker3:9092"}, c.Brokers)
+	assert.Equal(t, null.StringFrom("someTopic"), c.Topic)
+	assert.Equal(t, null.StringFrom("json"), c.Format)
+	assert.Equal(t, null.StringFrom("SASL_PLAINTEXT"), c.AuthMechanism)
+	assert.Equal(t, null.StringFrom("johndoe"), c.User)
+	assert.Equal(t, null.StringFrom("123password"), c.Password)
+	assert.Equal(t, true, c.SSL)
 }
 
 func TestConsolidatedConfig(t *testing.T) {
@@ -80,11 +111,73 @@ func TestConsolidatedConfig(t *testing.T) {
 		err     string
 	}{
 		"default": {
+			env: map[string]string{
+				"K6_KAFKA_AUTH_MECHANISM": "none",
+			},
 			config: Config{
 				Format:         null.StringFrom("json"),
 				PushInterval:   types.NullDurationFrom(1 * time.Second),
 				InfluxDBConfig: newInfluxdbConfig(),
+				AuthMechanism:  null.StringFrom("none"),
+				Version:        null.StringFrom(sarama.DefaultVersion.String()),
 			},
+		},
+		"auth": {
+			env: map[string]string{
+				"K6_KAFKA_AUTH_MECHANISM": "scram-sha-512",
+				"K6_KAFKA_SASL_PASSWORD":  "password123",
+				"K6_KAFKA_SASL_USER":      "testuser",
+			},
+			config: Config{
+				Format:         null.StringFrom("json"),
+				PushInterval:   types.NullDurationFrom(1 * time.Second),
+				InfluxDBConfig: newInfluxdbConfig(),
+				AuthMechanism:  null.StringFrom("scram-sha-512"),
+				Password:       null.StringFrom("password123"),
+				User:           null.StringFrom("testuser"),
+				Version:        null.StringFrom(sarama.DefaultVersion.String()),
+			},
+		},
+		"auth-missing-credentials": {
+			env: map[string]string{
+				"K6_KAFKA_AUTH_MECHANISM": "scram-sha-512",
+			},
+			config: Config{
+				Format:         null.StringFrom("json"),
+				PushInterval:   types.NullDurationFrom(1 * time.Second),
+				InfluxDBConfig: newInfluxdbConfig(),
+				AuthMechanism:  null.StringFrom("scram-sha-512"),
+				Version:        null.StringFrom(sarama.DefaultVersion.String()),
+			},
+			err: "user and password are required when auth mechanism is provided",
+		},
+		"auth-missing-user": {
+			env: map[string]string{
+				"K6_KAFKA_AUTH_MECHANISM": "scram-sha-512",
+				"K6_KAFKA_SASL_PASSWORD":  "password123",
+			},
+			config: Config{
+				Format:         null.StringFrom("json"),
+				PushInterval:   types.NullDurationFrom(1 * time.Second),
+				InfluxDBConfig: newInfluxdbConfig(),
+				AuthMechanism:  null.StringFrom("scram-sha-512"),
+				Version:        null.StringFrom(sarama.DefaultVersion.String()),
+			},
+			err: "user and password are required when auth mechanism is provided",
+		},
+		"auth-missing-password": {
+			env: map[string]string{
+				"K6_KAFKA_AUTH_MECHANISM": "scram-sha-512",
+				"K6_KAFKA_SASL_USER":      "testuser",
+			},
+			config: Config{
+				Format:         null.StringFrom("json"),
+				PushInterval:   types.NullDurationFrom(1 * time.Second),
+				InfluxDBConfig: newInfluxdbConfig(),
+				AuthMechanism:  null.StringFrom("scram-sha-512"),
+				Version:        null.StringFrom(sarama.DefaultVersion.String()),
+			},
+			err: "user and password are required when auth mechanism is provided",
 		},
 	}
 

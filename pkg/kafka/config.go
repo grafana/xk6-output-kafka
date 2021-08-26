@@ -22,8 +22,10 @@ package kafka
 
 import (
 	"encoding/json"
+	"errors"
 	"time"
 
+	"github.com/Shopify/sarama"
 	"github.com/kelseyhightower/envconfig"
 	"github.com/kubernetes/helm/pkg/strvals"
 	"github.com/mitchellh/mapstructure"
@@ -38,9 +40,15 @@ type Config struct {
 	Brokers []string `json:"brokers" envconfig:"K6_KAFKA_BROKERS"`
 
 	// Samples.
-	Topic        null.String        `json:"topic" envconfig:"K6_KAFKA_TOPIC"`
-	Format       null.String        `json:"format" envconfig:"K6_KAFKA_FORMAT"`
-	PushInterval types.NullDuration `json:"push_interval" envconfig:"K6_KAFKA_PUSH_INTERVAL"`
+	Topic         null.String        `json:"topic" envconfig:"K6_KAFKA_TOPIC"`
+	User          null.String        `json:"user" envconfig:"K6_KAFKA_SASL_USER"`
+	Password      null.String        `json:"password" envconfig:"K6_KAFKA_SASL_PASSWORD"`
+	AuthMechanism null.String        `json:"auth_mechanism" envconfig:"K6_KAFKA_AUTH_MECHANISM"`
+	Format        null.String        `json:"format" envconfig:"K6_KAFKA_FORMAT"`
+	PushInterval  types.NullDuration `json:"push_interval" envconfig:"K6_KAFKA_PUSH_INTERVAL"`
+	Version       null.String        `json:"version" envconfig:"K6_KAFKA_VERSION"`
+	SSL           bool               `json:"ssl" envconfig:"K6_KAFKA_SSL"`
+	Insecure      bool               `json:"insecure" envconfig:"K6_KAFKA_INSECURE"`
 
 	InfluxDBConfig influxdbConfig `json:"influxdb"`
 }
@@ -48,12 +56,18 @@ type Config struct {
 // config is a duplicate of ConfigFields as we can not mapstructure.Decode into
 // null types so we duplicate the struct with primitive types to Decode into
 type config struct {
-	Brokers      []string `json:"brokers" mapstructure:"brokers" envconfig:"K6_KAFKA_BROKERS"`
-	Topic        string   `json:"topic" mapstructure:"topic" envconfig:"K6_KAFKA_TOPIC"`
-	Format       string   `json:"format" mapstructure:"format" envconfig:"K6_KAFKA_FORMAT"`
-	PushInterval string   `json:"push_interval" mapstructure:"push_interval" envconfig:"K6_KAFKA_PUSH_INTERVAL"`
+	Brokers       []string `json:"brokers" mapstructure:"brokers" envconfig:"K6_KAFKA_BROKERS"`
+	Topic         string   `json:"topic" mapstructure:"topic" envconfig:"K6_KAFKA_TOPIC"`
+	Format        string   `json:"format" mapstructure:"format" envconfig:"K6_KAFKA_FORMAT"`
+	PushInterval  string   `json:"push_interval" mapstructure:"push_interval" envconfig:"K6_KAFKA_PUSH_INTERVAL"`
+	User          string   `json:"user" mapstructure:"user" envconfig:"K6_KAFKA_SASL_USER"`
+	Password      string   `json:"password" mapstructure:"password" envconfig:"K6_KAFKA_SASL_PASSWORD"`
+	AuthMechanism string   `json:"auth_mechanism" mapstructure:"auth_mechanism" envconfig:"K6_KAFKA_AUTH_MECHANISM"`
 
 	InfluxDBConfig influxdbConfig `json:"influxdb" mapstructure:"influxdb"`
+	Version        string         `json:"version" mapstructure:"version"`
+	SSL            bool           `json:"ssl" mapstructure:"ssl"`
+	Insecure       bool           `json:"insecure" mapstructure:"insecure"`
 }
 
 // NewConfig creates a new Config instance with default values for some fields.
@@ -62,6 +76,10 @@ func NewConfig() Config {
 		Format:         null.StringFrom("json"),
 		PushInterval:   types.NullDurationFrom(1 * time.Second),
 		InfluxDBConfig: newInfluxdbConfig(),
+		AuthMechanism:  null.StringFrom("none"),
+		Version:        null.StringFrom(sarama.DefaultVersion.String()),
+		SSL:            false,
+		Insecure:       false,
 	}
 }
 
@@ -78,6 +96,26 @@ func (c Config) Apply(cfg Config) Config {
 	if cfg.PushInterval.Valid {
 		c.PushInterval = cfg.PushInterval
 	}
+	if cfg.AuthMechanism.Valid {
+		c.AuthMechanism = cfg.AuthMechanism
+	}
+	if cfg.User.Valid {
+		c.User = cfg.User
+	}
+	if cfg.Password.Valid {
+		c.Password = cfg.Password
+	}
+	if cfg.Version.Valid {
+		c.Version = cfg.Version
+	}
+	if cfg.SSL {
+		c.SSL = cfg.SSL
+	}
+
+	if c.Insecure {
+		c.Insecure = cfg.Insecure
+	}
+
 	c.InfluxDBConfig = c.InfluxDBConfig.Apply(cfg.InfluxDBConfig)
 	return c
 }
@@ -111,6 +149,30 @@ func ParseArg(arg string) (Config, error) {
 		}
 	}
 
+	if v, ok := params["version"].(string); ok {
+		c.Version = null.StringFrom(v)
+	}
+
+	if v, ok := params["ssl"].(bool); ok {
+		c.SSL = v
+	}
+
+	if v, ok := params["skip_cert_verify"].(bool); ok {
+		c.Insecure = v
+	}
+
+	if v, ok := params["auth_mechanism"].(string); ok {
+		c.AuthMechanism = null.StringFrom(v)
+	}
+
+	if v, ok := params["user"].(string); ok {
+		c.User = null.StringFrom(v)
+	}
+
+	if v, ok := params["password"].(string); ok {
+		c.Password = null.StringFrom(v)
+	}
+
 	var cfg config
 	err = mapstructure.Decode(params, &cfg)
 	if err != nil {
@@ -141,7 +203,12 @@ func GetConsolidatedConfig(jsonRawConf json.RawMessage, env map[string]string, a
 		// TODO: get rid of envconfig and actually use the env parameter...
 		return result, err
 	}
+
 	result = result.Apply(envConfig)
+
+	if result.AuthMechanism.String != "none" && (!result.User.Valid || !result.Password.Valid) {
+		return result, errors.New("user and password are required when auth mechanism is provided")
+	}
 
 	if arg != "" {
 		urlConf, err := ParseArg(arg)

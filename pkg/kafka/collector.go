@@ -65,7 +65,7 @@ func New(p output.Params) (*Collector, error) {
 		if conf.SSL {
 			saramaConfig.Net.TLS.Enable = true
 			saramaConfig.Net.TLS.Config = &tls.Config{
-				InsecureSkipVerify: conf.SkipCertVerify,
+				InsecureSkipVerify: conf.Insecure,
 			}
 
 		}
@@ -75,10 +75,10 @@ func New(p output.Params) (*Collector, error) {
 			saramaConfig.Net.SASL.Mechanism = sarama.SASLTypePlaintext
 		case "scram-sha-512":
 			saramaConfig.Net.SASL.Mechanism = sarama.SASLTypeSCRAMSHA512
-			saramaConfig.Net.SASL.SCRAMClientGeneratorFunc = func() sarama.SCRAMClient { return &XDGSCRAMClient{HashGeneratorFcn: SHA512} }
+			saramaConfig.Net.SASL.SCRAMClientGeneratorFunc = func() sarama.SCRAMClient { return &xDGSCRAMClient{HashGeneratorFcn: SHA512} }
 		case "scram-sha-256":
 			saramaConfig.Net.SASL.Mechanism = sarama.SASLTypeSCRAMSHA256
-			saramaConfig.Net.SASL.SCRAMClientGeneratorFunc = func() sarama.SCRAMClient { return &XDGSCRAMClient{HashGeneratorFcn: SHA256} }
+			saramaConfig.Net.SASL.SCRAMClientGeneratorFunc = func() sarama.SCRAMClient { return &xDGSCRAMClient{HashGeneratorFcn: SHA256} }
 		default:
 			return nil, errors.New("invalid auth mechanism for kafka SASL")
 		}
@@ -112,7 +112,6 @@ func (c *Collector) Description() string {
 }
 
 func (c *Collector) Stop() error {
-
 	c.done <- struct{}{}
 	<-c.done
 

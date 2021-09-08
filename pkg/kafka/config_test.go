@@ -145,6 +145,63 @@ func TestConsolidatedConfig(t *testing.T) {
 				"K6_KAFKA_SSL": "true",
 			},
 		},
+		"auth": {
+			env: map[string]string{
+				"K6_KAFKA_AUTH_MECHANISM": "scram-sha-512",
+				"K6_KAFKA_SASL_PASSWORD":  "password123",
+				"K6_KAFKA_SASL_USER":      "testuser",
+			},
+			config: Config{
+				Format:         null.StringFrom("json"),
+				PushInterval:   types.NullDurationFrom(1 * time.Second),
+				InfluxDBConfig: newInfluxdbConfig(),
+				AuthMechanism:  null.StringFrom("scram-sha-512"),
+				Password:       null.StringFrom("password123"),
+				User:           null.StringFrom("testuser"),
+				Version:        null.StringFrom(sarama.DefaultVersion.String()),
+			},
+		},
+		"auth-missing-credentials": {
+			env: map[string]string{
+				"K6_KAFKA_AUTH_MECHANISM": "scram-sha-512",
+			},
+			config: Config{
+				Format:         null.StringFrom("json"),
+				PushInterval:   types.NullDurationFrom(1 * time.Second),
+				InfluxDBConfig: newInfluxdbConfig(),
+				AuthMechanism:  null.StringFrom("scram-sha-512"),
+				Version:        null.StringFrom(sarama.DefaultVersion.String()),
+			},
+			err: "user and password are required when auth mechanism is provided",
+		},
+		"auth-missing-user": {
+			env: map[string]string{
+				"K6_KAFKA_AUTH_MECHANISM": "scram-sha-512",
+				"K6_KAFKA_SASL_PASSWORD":  "password123",
+			},
+			config: Config{
+				Format:         null.StringFrom("json"),
+				PushInterval:   types.NullDurationFrom(1 * time.Second),
+				InfluxDBConfig: newInfluxdbConfig(),
+				AuthMechanism:  null.StringFrom("scram-sha-512"),
+				Version:        null.StringFrom(sarama.DefaultVersion.String()),
+			},
+			err: "user and password are required when auth mechanism is provided",
+		},
+		"auth-missing-password": {
+			env: map[string]string{
+				"K6_KAFKA_AUTH_MECHANISM": "scram-sha-512",
+				"K6_KAFKA_SASL_USER":      "testuser",
+			},
+			config: Config{
+				Format:         null.StringFrom("json"),
+				PushInterval:   types.NullDurationFrom(1 * time.Second),
+				InfluxDBConfig: newInfluxdbConfig(),
+				AuthMechanism:  null.StringFrom("scram-sha-512"),
+				Version:        null.StringFrom(sarama.DefaultVersion.String()),
+			},
+			err: "user and password are required when auth mechanism is provided",
+		},
 	}
 
 	for name, testCase := range testCases {

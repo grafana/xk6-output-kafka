@@ -23,6 +23,7 @@ package kafka
 import (
 	"encoding/json"
 	"fmt"
+	"os"
 	"testing"
 
 	"github.com/Shopify/sarama"
@@ -41,6 +42,8 @@ func TestRun(t *testing.T) {
 	seedMeta.AddBroker(coordinator.Addr(), coordinator.BrokerID())
 	seedMeta.AddTopicPartition("my_topic", 0, 1, []int32{}, []int32{}, []int32{}, sarama.ErrNoError)
 	broker.Returns(seedMeta)
+
+	os.Clearenv()
 
 	c, err := New(output.Params{
 		Logger:     testutils.NewLogger(t),

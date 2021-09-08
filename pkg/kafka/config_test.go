@@ -123,6 +123,9 @@ func TestConsolidatedConfig(t *testing.T) {
 		err     string
 	}{
 		"default": {
+			env: map[string]string{
+				"K6_KAFKA_AUTH_MECHANISM": "none",
+			},
 			config: Config{
 				Format:         null.StringFrom("json"),
 				PushInterval:   types.NullDurationFrom(1 * time.Second),

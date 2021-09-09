@@ -23,7 +23,7 @@ package kafka
 import (
 	"crypto/tls"
 	"encoding/json"
-	"fmt"
+	"sync"
 	"time"
 
 	"github.com/Shopify/sarama"
@@ -42,7 +42,6 @@ type Output struct {
 
 	Config   Config
 	CloseFn  func() error
-	done     chan struct{}
 	logger   logrus.FieldLogger
 	Producer sarama.AsyncProducer
 }
@@ -66,14 +65,13 @@ func newOutput(params output.Params) (*Output, error) {
 		Producer: producer,
 		logger:   params.Logger,
 		Config:   config,
-		done:     make(chan struct{}),
 	}, nil
 
 }
 
 func newProducer(config Config) (sarama.AsyncProducer, error) {
 	saramaConfig := sarama.NewConfig()
-	saramaConfig.Producer.Return.Errors = false
+	saramaConfig.Producer.Return.Errors = config.LogError.Bool
 
 	saramaAuthMechanism := config.AuthMechanism.String
 
@@ -82,10 +80,10 @@ func newProducer(config Config) (sarama.AsyncProducer, error) {
 		saramaConfig.Net.SASL.Handshake = true
 		saramaConfig.Net.SASL.User = config.User.String
 		saramaConfig.Net.SASL.Password = config.Password.String
-		if config.SSL {
+		if config.SSL.Bool {
 			saramaConfig.Net.TLS.Enable = true
 			saramaConfig.Net.TLS.Config = &tls.Config{
-				InsecureSkipVerify: config.Insecure,
+				InsecureSkipVerify: config.Insecure.Bool,
 				ClientAuth:         0,
 			}
 		}
@@ -94,10 +92,10 @@ func newProducer(config Config) (sarama.AsyncProducer, error) {
 			saramaConfig.Net.SASL.Mechanism = sarama.SASLTypePlaintext
 		case "scram-sha-512":
 			saramaConfig.Net.SASL.Mechanism = sarama.SASLTypeSCRAMSHA512
-			saramaConfig.Net.SASL.SCRAMClientGeneratorFunc = func() sarama.SCRAMClient { return &XDGSCRAMClient{HashGeneratorFcn: SHA512} }
+			saramaConfig.Net.SASL.SCRAMClientGeneratorFunc = func() sarama.SCRAMClient { return &xDGSCRAMClient{HashGeneratorFcn: SHA512} }
 		case "scram-sha-256":
 			saramaConfig.Net.SASL.Mechanism = sarama.SASLTypeSCRAMSHA256
-			saramaConfig.Net.SASL.SCRAMClientGeneratorFunc = func() sarama.SCRAMClient { return &XDGSCRAMClient{HashGeneratorFcn: SHA256} }
+			saramaConfig.Net.SASL.SCRAMClientGeneratorFunc = func() sarama.SCRAMClient { return &xDGSCRAMClient{HashGeneratorFcn: SHA256} }
 		}
 	}
 
@@ -113,7 +111,7 @@ func newProducer(config Config) (sarama.AsyncProducer, error) {
 }
 
 func (o *Output) Description() string {
-	return fmt.Sprintf("Kafka: Kafka Sync output on topic %v", o.Config.Topic.String)
+	return "xk6-kafka"
 }
 
 func (o *Output) Start() error {
@@ -132,6 +130,20 @@ func (o *Output) Stop() error {
 	defer o.logger.Debug("Kafka: Stopped!")
 	o.periodicFlusher.Stop()
 	o.Producer.AsyncClose()
+
+	if o.Config.LogError.Bool {
+		var wg sync.WaitGroup
+
+		wg.Add(1)
+		go func() {
+			for err := range o.Producer.Errors() {
+				o.logger.WithError(err.Err).Error("Kafka: failed to send message.")
+			}
+			wg.Done()
+		}()
+		wg.Wait()
+	}
+
 	return nil
 }
 
@@ -190,9 +202,6 @@ func (o *Output) flushMetrics() {
 	o.logger.Debug("Kafka: Delivering...")
 	for _, message := range messages {
 		o.Producer.Input() <- &sarama.ProducerMessage{Topic: o.Config.Topic.String, Value: sarama.StringEncoder(message)}
-		if err != nil {
-			o.logger.WithError(err).Error("Kafka: failed to send message.")
-		}
 	}
 	t := time.Since(startTime)
 	o.logger.WithField("t", t).Debug("Kafka: Delivered!")

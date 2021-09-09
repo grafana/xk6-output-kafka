@@ -77,7 +77,7 @@ func TestConfigParseArg(t *testing.T) {
 	assert.Equal(t, null.StringFrom("SASL_PLAINTEXT"), c.AuthMechanism)
 	assert.Equal(t, null.StringFrom("johndoe"), c.User)
 	assert.Equal(t, null.StringFrom("123password"), c.Password)
-	assert.Equal(t, false, c.SSL)
+	assert.Equal(t, null.NewBool(false, false), c.SSL)
 
 	c, err = ParseArg("brokers={broker2,broker3:9092},topic=someTopic,format=json,auth_mechanism=SASL_PLAINTEXT,user=johndoe,password=123password,ssl=false")
 	assert.Nil(t, err)
@@ -87,8 +87,8 @@ func TestConfigParseArg(t *testing.T) {
 	assert.Equal(t, null.StringFrom("SASL_PLAINTEXT"), c.AuthMechanism)
 	assert.Equal(t, null.StringFrom("johndoe"), c.User)
 	assert.Equal(t, null.StringFrom("123password"), c.Password)
-	assert.Equal(t, false, c.SSL)
-	assert.Equal(t, false, c.Insecure)
+	assert.Equal(t, null.BoolFrom(false), c.SSL)
+	assert.Equal(t, null.NewBool(false, false), c.Insecure)
 
 	c, err = ParseArg("brokers={broker2,broker3:9092},topic=someTopic,format=json,auth_mechanism=SASL_PLAINTEXT,user=johndoe,password=123password,ssl=true")
 	assert.Nil(t, err)
@@ -98,8 +98,8 @@ func TestConfigParseArg(t *testing.T) {
 	assert.Equal(t, null.StringFrom("SASL_PLAINTEXT"), c.AuthMechanism)
 	assert.Equal(t, null.StringFrom("johndoe"), c.User)
 	assert.Equal(t, null.StringFrom("123password"), c.Password)
-	assert.Equal(t, true, c.SSL)
-	assert.Equal(t, false, c.Insecure)
+	assert.Equal(t, null.BoolFrom(true), c.SSL)
+	assert.Equal(t, null.NewBool(false, false), c.Insecure)
 
 	c, err = ParseArg("brokers={broker2,broker3:9092},topic=someTopic,format=json,auth_mechanism=SASL_PLAINTEXT,user=johndoe,password=123password,ssl=true,skip_cert_verify=true")
 	assert.Nil(t, err)
@@ -108,8 +108,27 @@ func TestConfigParseArg(t *testing.T) {
 	assert.Equal(t, null.StringFrom("json"), c.Format)
 	assert.Equal(t, null.StringFrom("SASL_PLAINTEXT"), c.AuthMechanism)
 	assert.Equal(t, null.StringFrom("johndoe"), c.User)
-	assert.Equal(t, true, c.SSL)
-	assert.Equal(t, true, c.Insecure)
+	assert.Equal(t, null.BoolFrom(true), c.SSL)
+	assert.Equal(t, null.BoolFrom(true), c.Insecure)
+	assert.Equal(t, null.NewBool(false, false), c.LogError)
+
+	c, err = ParseArg("brokers={broker2,broker3:9092},topic=someTopic,format=json,auth_mechanism=SASL_PLAINTEXT,user=johndoe,password=123password,log_error=true")
+	assert.Nil(t, err)
+	assert.Equal(t, []string{"broker2", "broker3:9092"}, c.Brokers)
+	assert.Equal(t, null.StringFrom("someTopic"), c.Topic)
+	assert.Equal(t, null.StringFrom("json"), c.Format)
+	assert.Equal(t, null.StringFrom("SASL_PLAINTEXT"), c.AuthMechanism)
+	assert.Equal(t, null.StringFrom("johndoe"), c.User)
+	assert.Equal(t, null.BoolFrom(true), c.LogError)
+
+	c, err = ParseArg("brokers={broker2,broker3:9092},topic=someTopic,format=json,auth_mechanism=SASL_PLAINTEXT,user=johndoe,password=123password,log_error=false")
+	assert.Nil(t, err)
+	assert.Equal(t, []string{"broker2", "broker3:9092"}, c.Brokers)
+	assert.Equal(t, null.StringFrom("someTopic"), c.Topic)
+	assert.Equal(t, null.StringFrom("json"), c.Format)
+	assert.Equal(t, null.StringFrom("SASL_PLAINTEXT"), c.AuthMechanism)
+	assert.Equal(t, null.StringFrom("johndoe"), c.User)
+	assert.Equal(t, null.BoolFrom(false), c.LogError)
 }
 
 func TestConsolidatedConfig(t *testing.T) {
@@ -132,7 +151,9 @@ func TestConsolidatedConfig(t *testing.T) {
 				InfluxDBConfig: newInfluxdbConfig(),
 				AuthMechanism:  null.StringFrom("none"),
 				Version:        null.StringFrom(sarama.DefaultVersion.String()),
-				SSL:            false,
+				SSL:            null.BoolFrom(false),
+				Insecure:       null.BoolFrom(false),
+				LogError:       null.BoolFrom(true),
 			},
 		},
 		"ssl-true-through-env": {
@@ -142,7 +163,9 @@ func TestConsolidatedConfig(t *testing.T) {
 				InfluxDBConfig: newInfluxdbConfig(),
 				AuthMechanism:  null.StringFrom("none"),
 				Version:        null.StringFrom(sarama.DefaultVersion.String()),
-				SSL:            true,
+				SSL:            null.BoolFrom(true),
+				Insecure:       null.BoolFrom(false),
+				LogError:       null.BoolFrom(true),
 			},
 			env: map[string]string{
 				"K6_KAFKA_SSL": "true",
@@ -162,6 +185,9 @@ func TestConsolidatedConfig(t *testing.T) {
 				Password:       null.StringFrom("password123"),
 				User:           null.StringFrom("testuser"),
 				Version:        null.StringFrom(sarama.DefaultVersion.String()),
+				SSL:            null.BoolFrom(false),
+				Insecure:       null.BoolFrom(false),
+				LogError:       null.BoolFrom(true),
 			},
 		},
 		"auth-missing-credentials": {
@@ -174,6 +200,9 @@ func TestConsolidatedConfig(t *testing.T) {
 				InfluxDBConfig: newInfluxdbConfig(),
 				AuthMechanism:  null.StringFrom("scram-sha-512"),
 				Version:        null.StringFrom(sarama.DefaultVersion.String()),
+				SSL:            null.BoolFrom(false),
+				Insecure:       null.BoolFrom(false),
+				LogError:       null.BoolFrom(true),
 			},
 			err: "user and password are required when auth mechanism is provided",
 		},
@@ -188,6 +217,9 @@ func TestConsolidatedConfig(t *testing.T) {
 				InfluxDBConfig: newInfluxdbConfig(),
 				AuthMechanism:  null.StringFrom("scram-sha-512"),
 				Version:        null.StringFrom(sarama.DefaultVersion.String()),
+				SSL:            null.BoolFrom(false),
+				Insecure:       null.BoolFrom(false),
+				LogError:       null.BoolFrom(true),
 			},
 			err: "user and password are required when auth mechanism is provided",
 		},
@@ -202,8 +234,27 @@ func TestConsolidatedConfig(t *testing.T) {
 				InfluxDBConfig: newInfluxdbConfig(),
 				AuthMechanism:  null.StringFrom("scram-sha-512"),
 				Version:        null.StringFrom(sarama.DefaultVersion.String()),
+				SSL:            null.BoolFrom(false),
+				Insecure:       null.BoolFrom(false),
+				LogError:       null.BoolFrom(true),
 			},
 			err: "user and password are required when auth mechanism is provided",
+		},
+		"disable_log_error": {
+			env: map[string]string{
+				"K6_KAFKA_AUTH_MECHANISM": "none",
+				"K6_KAFKA_LOG_ERROR":      "false",
+			},
+			config: Config{
+				Format:         null.StringFrom("json"),
+				PushInterval:   types.NullDurationFrom(1 * time.Second),
+				InfluxDBConfig: newInfluxdbConfig(),
+				AuthMechanism:  null.StringFrom("none"),
+				Version:        null.StringFrom(sarama.DefaultVersion.String()),
+				SSL:            null.BoolFrom(false),
+				Insecure:       null.BoolFrom(false),
+				LogError:       null.BoolFrom(false),
+			},
 		},
 	}
 

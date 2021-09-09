@@ -47,8 +47,9 @@ type Config struct {
 	Format        null.String        `json:"format" envconfig:"K6_KAFKA_FORMAT"`
 	PushInterval  types.NullDuration `json:"push_interval" envconfig:"K6_KAFKA_PUSH_INTERVAL"`
 	Version       null.String        `json:"version" envconfig:"K6_KAFKA_VERSION"`
-	SSL           bool               `json:"ssl" envconfig:"K6_KAFKA_SSL"`
-	Insecure      bool               `json:"insecure" envconfig:"K6_KAFKA_INSECURE"`
+	SSL           null.Bool          `json:"ssl" envconfig:"K6_KAFKA_SSL"`
+	Insecure      null.Bool          `json:"insecure" envconfig:"K6_KAFKA_INSECURE"`
+	LogError      null.Bool          `json:"log_error" envconfig:"K6_KAFKA_LOG_ERROR"`
 
 	InfluxDBConfig influxdbConfig `json:"influxdb"`
 }
@@ -68,6 +69,7 @@ type config struct {
 	Version        string         `json:"version" mapstructure:"version"`
 	SSL            bool           `json:"ssl" mapstructure:"ssl"`
 	Insecure       bool           `json:"insecure" mapstructure:"insecure"`
+	LogError       bool           `json:"log_error" mapstructure:"log_error"`
 }
 
 // NewConfig creates a new Config instance with default values for some fields.
@@ -78,8 +80,9 @@ func NewConfig() Config {
 		InfluxDBConfig: newInfluxdbConfig(),
 		AuthMechanism:  null.StringFrom("none"),
 		Version:        null.StringFrom(sarama.DefaultVersion.String()),
-		SSL:            false,
-		Insecure:       false,
+		SSL:            null.BoolFrom(false),
+		Insecure:       null.BoolFrom(false),
+		LogError:       null.BoolFrom(true),
 	}
 }
 
@@ -108,12 +111,16 @@ func (c Config) Apply(cfg Config) Config {
 	if cfg.Version.Valid {
 		c.Version = cfg.Version
 	}
-	if cfg.SSL {
+	if cfg.SSL.Valid {
 		c.SSL = cfg.SSL
 	}
 
-	if c.Insecure {
+	if cfg.Insecure.Valid {
 		c.Insecure = cfg.Insecure
+	}
+
+	if cfg.LogError.Valid {
+		c.LogError = cfg.LogError
 	}
 
 	c.InfluxDBConfig = c.InfluxDBConfig.Apply(cfg.InfluxDBConfig)
@@ -154,11 +161,15 @@ func ParseArg(arg string) (Config, error) {
 	}
 
 	if v, ok := params["ssl"].(bool); ok {
-		c.SSL = v
+		c.SSL = null.BoolFrom(v)
 	}
 
 	if v, ok := params["skip_cert_verify"].(bool); ok {
-		c.Insecure = v
+		c.Insecure = null.BoolFrom(v)
+	}
+
+	if v, ok := params["log_error"].(bool); ok {
+		c.LogError = null.BoolFrom(v)
 	}
 
 	if v, ok := params["auth_mechanism"].(string); ok {

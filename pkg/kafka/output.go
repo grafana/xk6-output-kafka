@@ -44,6 +44,7 @@ type Output struct {
 	CloseFn  func() error
 	logger   logrus.FieldLogger
 	Producer sarama.AsyncProducer
+	errorsWg sync.WaitGroup
 }
 
 func New(params output.Params) (output.Output, error) {
@@ -66,7 +67,6 @@ func newOutput(params output.Params) (*Output, error) {
 		logger:   params.Logger,
 		Config:   config,
 	}, nil
-
 }
 
 func newProducer(config Config) (sarama.AsyncProducer, error) {
@@ -100,7 +100,6 @@ func newProducer(config Config) (sarama.AsyncProducer, error) {
 	}
 
 	version, err := sarama.ParseKafkaVersion(config.Version.String)
-
 	if err != nil {
 		return nil, err
 	}
@@ -122,6 +121,15 @@ func (o *Output) Start() error {
 	}
 	o.periodicFlusher = periodicFlusher
 
+	if o.Config.LogError.Bool {
+		o.errorsWg.Add(1)
+		go func() {
+			for err := range o.Producer.Errors() {
+				o.logger.WithError(err.Err).Error("Kafka: failed to send message.")
+			}
+			o.errorsWg.Done()
+		}()
+	}
 	return nil
 }
 
@@ -130,25 +138,12 @@ func (o *Output) Stop() error {
 	defer o.logger.Debug("Kafka: Stopped!")
 	o.periodicFlusher.Stop()
 	o.Producer.AsyncClose()
-
-	if o.Config.LogError.Bool {
-		var wg sync.WaitGroup
-
-		wg.Add(1)
-		go func() {
-			for err := range o.Producer.Errors() {
-				o.logger.WithError(err.Err).Error("Kafka: failed to send message.")
-			}
-			wg.Done()
-		}()
-		wg.Wait()
-	}
+	o.errorsWg.Wait()
 
 	return nil
 }
 
 func (o *Output) batchFromBufferedSamples(bufferedSamples []stats.SampleContainer) ([]string, error) {
-
 	var formattedSamples []string
 	for _, bufferedSample := range bufferedSamples {
 		samples := bufferedSample.GetSamples()

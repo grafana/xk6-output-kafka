@@ -43,13 +43,13 @@ type Config struct {
 	Topic         null.String        `json:"topic" envconfig:"K6_KAFKA_TOPIC"`
 	User          null.String        `json:"user" envconfig:"K6_KAFKA_SASL_USER"`
 	Password      null.String        `json:"password" envconfig:"K6_KAFKA_SASL_PASSWORD"`
-	AuthMechanism null.String        `json:"auth_mechanism" envconfig:"K6_KAFKA_AUTH_MECHANISM"`
+	AuthMechanism null.String        `json:"authMechanism" envconfig:"K6_KAFKA_AUTH_MECHANISM"`
 	Format        null.String        `json:"format" envconfig:"K6_KAFKA_FORMAT"`
-	PushInterval  types.NullDuration `json:"push_interval" envconfig:"K6_KAFKA_PUSH_INTERVAL"`
+	PushInterval  types.NullDuration `json:"pushInterval" envconfig:"K6_KAFKA_PUSH_INTERVAL"`
 	Version       null.String        `json:"version" envconfig:"K6_KAFKA_VERSION"`
 	SSL           null.Bool          `json:"ssl" envconfig:"K6_KAFKA_SSL"`
 	Insecure      null.Bool          `json:"insecure" envconfig:"K6_KAFKA_INSECURE"`
-	LogError      null.Bool          `json:"log_error" envconfig:"K6_KAFKA_LOG_ERROR"`
+	LogError      null.Bool          `json:"logError" envconfig:"K6_KAFKA_LOG_ERROR"`
 
 	InfluxDBConfig influxdbConfig `json:"influxdb"`
 }
@@ -60,16 +60,16 @@ type config struct {
 	Brokers       []string `json:"brokers" mapstructure:"brokers" envconfig:"K6_KAFKA_BROKERS"`
 	Topic         string   `json:"topic" mapstructure:"topic" envconfig:"K6_KAFKA_TOPIC"`
 	Format        string   `json:"format" mapstructure:"format" envconfig:"K6_KAFKA_FORMAT"`
-	PushInterval  string   `json:"push_interval" mapstructure:"push_interval" envconfig:"K6_KAFKA_PUSH_INTERVAL"`
+	PushInterval  string   `json:"pushInterval" mapstructure:"push_interval" envconfig:"K6_KAFKA_PUSH_INTERVAL"`
 	User          string   `json:"user" mapstructure:"user" envconfig:"K6_KAFKA_SASL_USER"`
 	Password      string   `json:"password" mapstructure:"password" envconfig:"K6_KAFKA_SASL_PASSWORD"`
-	AuthMechanism string   `json:"auth_mechanism" mapstructure:"auth_mechanism" envconfig:"K6_KAFKA_AUTH_MECHANISM"`
+	AuthMechanism string   `json:"authMechanism" mapstructure:"auth_mechanism" envconfig:"K6_KAFKA_AUTH_MECHANISM"`
 
 	InfluxDBConfig influxdbConfig `json:"influxdb" mapstructure:"influxdb"`
 	Version        string         `json:"version" mapstructure:"version"`
 	SSL            bool           `json:"ssl" mapstructure:"ssl"`
 	Insecure       bool           `json:"insecure" mapstructure:"insecure"`
-	LogError       bool           `json:"log_error" mapstructure:"log_error"`
+	LogError       bool           `json:"logError" mapstructure:"log_error"`
 }
 
 // NewConfig creates a new Config instance with default values for some fields.

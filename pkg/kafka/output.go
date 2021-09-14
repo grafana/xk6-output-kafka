@@ -23,6 +23,7 @@ package kafka
 import (
 	"crypto/tls"
 	"encoding/json"
+	"fmt"
 	"sync"
 	"time"
 
@@ -37,7 +38,6 @@ const flushPeriod = 1 * time.Second
 type Output struct {
 	output.SampleBuffer
 
-	Params          output.Params
 	periodicFlusher *output.PeriodicFlusher
 
 	Config   Config
@@ -110,7 +110,7 @@ func newProducer(config Config) (sarama.AsyncProducer, error) {
 }
 
 func (o *Output) Description() string {
-	return "xk6-kafka"
+	return fmt.Sprintf("xk6-Kafka: Kafka Async output on topic %v", o.Config.Topic.String)
 }
 
 func (o *Output) Start() error {
@@ -124,6 +124,9 @@ func (o *Output) Start() error {
 	if o.Config.LogError.Bool {
 		o.errorsWg.Add(1)
 		go func() {
+			// Errors is the error output channel back to the user. You MUST read from this
+			// channel or the Producer will deadlock when the channel is full.
+			// reference: https://pkg.go.dev/github.com/shopify/sarama#AsyncProducer
 			for err := range o.Producer.Errors() {
 				o.logger.WithError(err.Err).Error("Kafka: failed to send message.")
 			}

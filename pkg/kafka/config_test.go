@@ -69,7 +69,7 @@ func TestConfigParseArg(t *testing.T) {
 	assert.Equal(t, null.StringFrom("influxdb"), c.Format)
 	assert.Equal(t, expInfluxConfig, c.InfluxDBConfig)
 
-	c, err = ParseArg("brokers={broker2,broker3:9092},topic=someTopic,format=json,auth_mechanism=SASL_PLAINTEXT,user=johndoe,password=123password")
+	c, err = ParseArg("brokers={broker2,broker3:9092},topic=someTopic,format=json,authMechanism=SASL_PLAINTEXT,user=johndoe,password=123password")
 	assert.Nil(t, err)
 	assert.Equal(t, []string{"broker2", "broker3:9092"}, c.Brokers)
 	assert.Equal(t, null.StringFrom("someTopic"), c.Topic)
@@ -79,7 +79,7 @@ func TestConfigParseArg(t *testing.T) {
 	assert.Equal(t, null.StringFrom("123password"), c.Password)
 	assert.Equal(t, null.NewBool(false, false), c.SSL)
 
-	c, err = ParseArg("brokers={broker2,broker3:9092},topic=someTopic,format=json,auth_mechanism=SASL_PLAINTEXT,user=johndoe,password=123password,ssl=false")
+	c, err = ParseArg("brokers={broker2,broker3:9092},topic=someTopic,format=json,authMechanism=SASL_PLAINTEXT,user=johndoe,password=123password,ssl=false")
 	assert.Nil(t, err)
 	assert.Equal(t, []string{"broker2", "broker3:9092"}, c.Brokers)
 	assert.Equal(t, null.StringFrom("someTopic"), c.Topic)
@@ -90,7 +90,7 @@ func TestConfigParseArg(t *testing.T) {
 	assert.Equal(t, null.BoolFrom(false), c.SSL)
 	assert.Equal(t, null.NewBool(false, false), c.Insecure)
 
-	c, err = ParseArg("brokers={broker2,broker3:9092},topic=someTopic,format=json,auth_mechanism=SASL_PLAINTEXT,user=johndoe,password=123password,ssl=true")
+	c, err = ParseArg("brokers={broker2,broker3:9092},topic=someTopic,format=json,authMechanism=SASL_PLAINTEXT,user=johndoe,password=123password,ssl=true")
 	assert.Nil(t, err)
 	assert.Equal(t, []string{"broker2", "broker3:9092"}, c.Brokers)
 	assert.Equal(t, null.StringFrom("someTopic"), c.Topic)
@@ -101,7 +101,7 @@ func TestConfigParseArg(t *testing.T) {
 	assert.Equal(t, null.BoolFrom(true), c.SSL)
 	assert.Equal(t, null.NewBool(false, false), c.Insecure)
 
-	c, err = ParseArg("brokers={broker2,broker3:9092},topic=someTopic,format=json,auth_mechanism=SASL_PLAINTEXT,user=johndoe,password=123password,ssl=true,skip_cert_verify=true")
+	c, err = ParseArg("brokers={broker2,broker3:9092},topic=someTopic,format=json,authMechanism=SASL_PLAINTEXT,user=johndoe,password=123password,ssl=true,insecure=true")
 	assert.Nil(t, err)
 	assert.Equal(t, []string{"broker2", "broker3:9092"}, c.Brokers)
 	assert.Equal(t, null.StringFrom("someTopic"), c.Topic)
@@ -112,7 +112,7 @@ func TestConfigParseArg(t *testing.T) {
 	assert.Equal(t, null.BoolFrom(true), c.Insecure)
 	assert.Equal(t, null.NewBool(false, false), c.LogError)
 
-	c, err = ParseArg("brokers={broker2,broker3:9092},topic=someTopic,format=json,auth_mechanism=SASL_PLAINTEXT,user=johndoe,password=123password,log_error=true")
+	c, err = ParseArg("brokers={broker2,broker3:9092},topic=someTopic,format=json,authMechanism=SASL_PLAINTEXT,user=johndoe,password=123password,logError=true")
 	assert.Nil(t, err)
 	assert.Equal(t, []string{"broker2", "broker3:9092"}, c.Brokers)
 	assert.Equal(t, null.StringFrom("someTopic"), c.Topic)
@@ -121,7 +121,7 @@ func TestConfigParseArg(t *testing.T) {
 	assert.Equal(t, null.StringFrom("johndoe"), c.User)
 	assert.Equal(t, null.BoolFrom(true), c.LogError)
 
-	c, err = ParseArg("brokers={broker2,broker3:9092},topic=someTopic,format=json,auth_mechanism=SASL_PLAINTEXT,user=johndoe,password=123password,log_error=false")
+	c, err = ParseArg("brokers={broker2,broker3:9092},topic=someTopic,format=json,authMechanism=SASL_PLAINTEXT,user=johndoe,password=123password,logError=false")
 	assert.Nil(t, err)
 	assert.Equal(t, []string{"broker2", "broker3:9092"}, c.Brokers)
 	assert.Equal(t, null.StringFrom("someTopic"), c.Topic)
@@ -240,7 +240,7 @@ func TestConsolidatedConfig(t *testing.T) {
 			},
 			err: "user and password are required when auth mechanism is provided",
 		},
-		"disable_log_error": {
+		"disable_logError": {
 			env: map[string]string{
 				"K6_KAFKA_AUTH_MECHANISM": "none",
 				"K6_KAFKA_LOG_ERROR":      "false",

@@ -60,16 +60,16 @@ type config struct {
 	Brokers       []string `json:"brokers" mapstructure:"brokers" envconfig:"K6_KAFKA_BROKERS"`
 	Topic         string   `json:"topic" mapstructure:"topic" envconfig:"K6_KAFKA_TOPIC"`
 	Format        string   `json:"format" mapstructure:"format" envconfig:"K6_KAFKA_FORMAT"`
-	PushInterval  string   `json:"pushInterval" mapstructure:"push_interval" envconfig:"K6_KAFKA_PUSH_INTERVAL"`
+	PushInterval  string   `json:"pushInterval" mapstructure:"pushInterval" envconfig:"K6_KAFKA_PUSH_INTERVAL"`
 	User          string   `json:"user" mapstructure:"user" envconfig:"K6_KAFKA_SASL_USER"`
 	Password      string   `json:"password" mapstructure:"password" envconfig:"K6_KAFKA_SASL_PASSWORD"`
-	AuthMechanism string   `json:"authMechanism" mapstructure:"auth_mechanism" envconfig:"K6_KAFKA_AUTH_MECHANISM"`
+	AuthMechanism string   `json:"authMechanism" mapstructure:"authMechanism" envconfig:"K6_KAFKA_AUTH_MECHANISM"`
 
 	InfluxDBConfig influxdbConfig `json:"influxdb" mapstructure:"influxdb"`
 	Version        string         `json:"version" mapstructure:"version"`
 	SSL            bool           `json:"ssl" mapstructure:"ssl"`
 	Insecure       bool           `json:"insecure" mapstructure:"insecure"`
-	LogError       bool           `json:"logError" mapstructure:"log_error"`
+	LogError       bool           `json:"logError" mapstructure:"logError"`
 }
 
 // NewConfig creates a new Config instance with default values for some fields.
@@ -149,7 +149,7 @@ func ParseArg(arg string) (Config, error) {
 
 	delete(params, "influxdb")
 
-	if v, ok := params["push_interval"].(string); ok {
+	if v, ok := params["pushInterval"].(string); ok {
 		err := c.PushInterval.UnmarshalText([]byte(v))
 		if err != nil {
 			return c, err
@@ -164,15 +164,15 @@ func ParseArg(arg string) (Config, error) {
 		c.SSL = null.BoolFrom(v)
 	}
 
-	if v, ok := params["skip_cert_verify"].(bool); ok {
+	if v, ok := params["insecure"].(bool); ok {
 		c.Insecure = null.BoolFrom(v)
 	}
 
-	if v, ok := params["log_error"].(bool); ok {
+	if v, ok := params["logError"].(bool); ok {
 		c.LogError = null.BoolFrom(v)
 	}
 
-	if v, ok := params["auth_mechanism"].(string); ok {
+	if v, ok := params["authMechanism"].(string); ok {
 		c.AuthMechanism = null.StringFrom(v)
 	}
 

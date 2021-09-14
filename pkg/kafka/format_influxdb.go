@@ -26,10 +26,10 @@ import (
 	"strings"
 
 	client "github.com/influxdata/influxdb1-client/v2"
-	"go.k6.io/k6/lib/types"
-	"go.k6.io/k6/stats"
 	"github.com/mitchellh/mapstructure"
 	"github.com/sirupsen/logrus"
+	"go.k6.io/k6/lib/types"
+	"go.k6.io/k6/stats"
 )
 
 type extractTagsToValuesFunc func(map[string]string, map[string]interface{}) map[string]interface{}

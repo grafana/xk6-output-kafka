@@ -29,11 +29,10 @@ import (
 	"github.com/Shopify/sarama"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"gopkg.in/guregu/null.v3"
-
 	"go.k6.io/k6/lib/testutils"
 	"go.k6.io/k6/output"
 	"go.k6.io/k6/stats"
+	"gopkg.in/guregu/null.v3"
 )
 
 func TestRun(t *testing.T) {
@@ -57,26 +56,26 @@ func TestRun(t *testing.T) {
 	require.NoError(t, c.Stop())
 }
 
-func TestFormatSamples(t *testing.T) {
-	c := Collector{}
+func TestFormatSample(t *testing.T) {
+	o := Output{}
 	metric := stats.New("my_metric", stats.Gauge)
 	samples := stats.Samples{
 		{Metric: metric, Value: 1.25, Tags: stats.IntoSampleTags(&map[string]string{"a": "1"})},
 		{Metric: metric, Value: 2, Tags: stats.IntoSampleTags(&map[string]string{"b": "2"})},
 	}
 
-	c.Config.Format = null.NewString("influxdb", false)
-	fmtdSamples, err := c.formatSamples(samples)
+	o.Config.Format = null.NewString("influxdb", false)
+	formattedSamples, err := o.formatSamples(samples)
 
 	assert.Nil(t, err)
-	assert.Equal(t, []string{"my_metric,a=1 value=1.25", "my_metric,b=2 value=2"}, fmtdSamples)
+	assert.Equal(t, []string{"my_metric,a=1 value=1.25", "my_metric,b=2 value=2"}, formattedSamples)
 
-	c.Config.Format = null.NewString("json", false)
-	fmtdSamples, err = c.formatSamples(samples)
+	o.Config.Format = null.NewString("json", false)
+	formattedSamples, err = o.formatSamples(samples)
 
 	expJSON1 := "{\"type\":\"Point\",\"data\":{\"time\":\"0001-01-01T00:00:00Z\",\"value\":1.25,\"tags\":{\"a\":\"1\"}},\"metric\":\"my_metric\"}"
 	expJSON2 := "{\"type\":\"Point\",\"data\":{\"time\":\"0001-01-01T00:00:00Z\",\"value\":2,\"tags\":{\"b\":\"2\"}},\"metric\":\"my_metric\"}"
 
 	assert.Nil(t, err)
-	assert.Equal(t, []string{expJSON1, expJSON2}, fmtdSamples)
+	assert.Equal(t, []string{expJSON1, expJSON2}, formattedSamples)
 }

@@ -256,6 +256,23 @@ func TestConsolidatedConfig(t *testing.T) {
 				LogError:              null.BoolFrom(false),
 			},
 		},
+		"arg_over_env": {
+			env: map[string]string{
+				"K6_KAFKA_AUTH_MECHANISM": "none",
+				"K6_KAFKA_LOG_ERROR":      "false",
+			},
+			arg: "logError=true",
+			config: Config{
+				Format:                null.StringFrom("json"),
+				PushInterval:          types.NullDurationFrom(1 * time.Second),
+				InfluxDBConfig:        newInfluxdbConfig(),
+				AuthMechanism:         null.StringFrom("none"),
+				Version:               null.StringFrom(sarama.DefaultVersion.String()),
+				SSL:                   null.BoolFrom(false),
+				InsecureSkipTLSVerify: null.BoolFrom(false),
+				LogError:              null.BoolFrom(true),
+			},
+		},
 	}
 
 	for name, testCase := range testCases {

@@ -58,8 +58,6 @@ type Config struct {
 // null types so we duplicate the struct with primitive types to Decode into
 type config struct {
 	Brokers []string `json:"brokers" mapstructure:"brokers" envconfig:"K6_KAFKA_BROKERS"`
-	Topic   string   `json:"topic" mapstructure:"topic" envconfig:"K6_KAFKA_TOPIC"`
-	Format  string   `json:"format" mapstructure:"format" envconfig:"K6_KAFKA_FORMAT"`
 }
 
 // NewConfig creates a new Config instance with default values for some fields.
@@ -173,6 +171,12 @@ func ParseArg(arg string) (Config, error) {
 	if v, ok := params["password"].(string); ok {
 		c.Password = null.StringFrom(v)
 	}
+	if v, ok := params["topic"].(string); ok {
+		c.Topic = null.StringFrom(v)
+	}
+	if v, ok := params["format"].(string); ok {
+		c.Format = null.StringFrom(v)
+	}
 
 	var cfg config
 	err = mapstructure.Decode(params, &cfg)
@@ -181,8 +185,6 @@ func ParseArg(arg string) (Config, error) {
 	}
 
 	c.Brokers = cfg.Brokers
-	c.Topic = null.StringFrom(cfg.Topic)
-	c.Format = null.StringFrom(cfg.Format)
 
 	return c, nil
 }

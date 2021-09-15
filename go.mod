@@ -7,7 +7,6 @@ require (
 	github.com/influxdata/influxdb1-client v0.0.0-20190402204710-8ff2fc3824fc
 	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/kubernetes/helm v2.9.0+incompatible
-	github.com/mitchellh/mapstructure v1.1.2
 	github.com/sirupsen/logrus v1.8.1
 	github.com/stretchr/testify v1.7.0
 	github.com/xdg/scram v1.0.3

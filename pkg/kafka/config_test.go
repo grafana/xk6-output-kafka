@@ -137,6 +137,10 @@ func TestConfigParseArg(t *testing.T) {
 	c, err = ParseArg("ssl=nottrue")
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), `Unknown or unparsed options 'ssl=nottrue'`)
+
+	c, err = ParseArg("brokers={broker2,broker3:9092},topic=someTopic,format=influxdb,influxdb.tagsAsFields=fake,influxdb.something=else")
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), `Unknown or unparsed options 'something=else'`)
 }
 
 func TestConsolidatedConfig(t *testing.T) {

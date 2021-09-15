@@ -29,7 +29,6 @@ import (
 	"github.com/Shopify/sarama"
 	"github.com/kelseyhightower/envconfig"
 	"github.com/kubernetes/helm/pkg/strvals"
-	"github.com/mitchellh/mapstructure"
 	"gopkg.in/guregu/null.v3"
 
 	"go.k6.io/k6/lib/types"
@@ -53,12 +52,6 @@ type Config struct {
 	LogError              null.Bool          `json:"logError" envconfig:"K6_KAFKA_LOG_ERROR"`
 
 	InfluxDBConfig influxdbConfig `json:"influxdb"`
-}
-
-// config is a duplicate of ConfigFields as we can not mapstructure.Decode into
-// null types so we duplicate the struct with primitive types to Decode into
-type config struct {
-	Brokers []string `mapstructure:"brokers"`
 }
 
 // NewConfig creates a new Config instance with default values for some fields.
@@ -186,27 +179,36 @@ func ParseArg(arg string) (Config, error) {
 		delete(params, "format")
 	}
 
-	var cfg config
 	if v, ok := params["brokers"].(string); ok {
-		params["brokers"] = []string{v}
-	}
-	err = mapstructure.Decode(params, &cfg)
-	if err != nil {
-		return c, err
-	}
-	delete(params, "brokers")
+		c.Brokers = []string{v}
 
-	c.Brokers = cfg.Brokers
+		delete(params, "brokers")
+	}
+	if v, ok := params["brokers"].([]interface{}); ok {
+		c.Brokers = interfaceSliceToStringSlice(v)
+		delete(params, "brokers")
+	}
 
 	if len(params) > 0 {
-		var s string
-		for k, v := range params {
-			s += fmt.Sprintf("%s=%v,", k, v)
-		}
-		s = s[:len(s)-1]
-		return c, errors.New("Unknown or unparsed options '" + s + "'")
+		return c, errors.New("Unknown or unparsed options '" + mapToString(params) + "'")
 	}
 	return c, nil
+}
+
+func mapToString(m map[string]interface{}) string {
+	var s string
+	for k, v := range m {
+		s += fmt.Sprintf("%s=%v,", k, v)
+	}
+	return s[:len(s)-1]
+}
+
+func interfaceSliceToStringSlice(input []interface{}) []string {
+	output := make([]string, len(input))
+	for i, v := range input {
+		output[i] = fmt.Sprintf("%v", v)
+	}
+	return output
 }
 
 // GetConsolidatedConfig combines {default config values + JSON config +

@@ -256,10 +256,11 @@ func TestConsolidatedConfig(t *testing.T) {
 				LogError:              null.BoolFrom(false),
 			},
 		},
-		"arg_over_env": {
+		"arg_over_env_with_brokers": {
 			env: map[string]string{
 				"K6_KAFKA_AUTH_MECHANISM": "none",
 				"K6_KAFKA_LOG_ERROR":      "false",
+				"K6_KAFKA_BROKERS":        "something",
 			},
 			arg: "logError=true",
 			config: Config{
@@ -271,6 +272,7 @@ func TestConsolidatedConfig(t *testing.T) {
 				SSL:                   null.BoolFrom(false),
 				InsecureSkipTLSVerify: null.BoolFrom(false),
 				LogError:              null.BoolFrom(true),
+				Brokers:               []string{"something"},
 			},
 		},
 	}

@@ -57,7 +57,7 @@ type Config struct {
 // config is a duplicate of ConfigFields as we can not mapstructure.Decode into
 // null types so we duplicate the struct with primitive types to Decode into
 type config struct {
-	Brokers []string `json:"brokers" mapstructure:"brokers" envconfig:"K6_KAFKA_BROKERS"`
+	Brokers []string `mapstructure:"brokers"`
 }
 
 // NewConfig creates a new Config instance with default values for some fields.
@@ -123,10 +123,6 @@ func ParseArg(arg string) (Config, error) {
 		return c, err
 	}
 
-	if v, ok := params["brokers"].(string); ok {
-		params["brokers"] = []string{v}
-	}
-
 	if v, ok := params["influxdb"].(map[string]interface{}); ok {
 		influxConfig, err := influxdbParseMap(v)
 		if err != nil {
@@ -179,13 +175,14 @@ func ParseArg(arg string) (Config, error) {
 	}
 
 	var cfg config
+	if v, ok := params["brokers"].(string); ok {
+		params["brokers"] = []string{v}
+	}
 	err = mapstructure.Decode(params, &cfg)
 	if err != nil {
 		return c, err
 	}
-
 	c.Brokers = cfg.Brokers
-
 	return c, nil
 }
 

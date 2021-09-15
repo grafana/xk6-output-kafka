@@ -40,16 +40,16 @@ type Config struct {
 	Brokers []string `json:"brokers" envconfig:"K6_KAFKA_BROKERS"`
 
 	// Samples.
-	Topic         null.String        `json:"topic" envconfig:"K6_KAFKA_TOPIC"`
-	User          null.String        `json:"user" envconfig:"K6_KAFKA_SASL_USER"`
-	Password      null.String        `json:"password" envconfig:"K6_KAFKA_SASL_PASSWORD"`
-	AuthMechanism null.String        `json:"authMechanism" envconfig:"K6_KAFKA_AUTH_MECHANISM"`
-	Format        null.String        `json:"format" envconfig:"K6_KAFKA_FORMAT"`
-	PushInterval  types.NullDuration `json:"pushInterval" envconfig:"K6_KAFKA_PUSH_INTERVAL"`
-	Version       null.String        `json:"version" envconfig:"K6_KAFKA_VERSION"`
-	SSL           null.Bool          `json:"ssl" envconfig:"K6_KAFKA_SSL"`
-	Insecure      null.Bool          `json:"insecure" envconfig:"K6_KAFKA_INSECURE"`
-	LogError      null.Bool          `json:"logError" envconfig:"K6_KAFKA_LOG_ERROR"`
+	Topic                 null.String        `json:"topic" envconfig:"K6_KAFKA_TOPIC"`
+	User                  null.String        `json:"user" envconfig:"K6_KAFKA_SASL_USER"`
+	Password              null.String        `json:"password" envconfig:"K6_KAFKA_SASL_PASSWORD"`
+	AuthMechanism         null.String        `json:"authMechanism" envconfig:"K6_KAFKA_AUTH_MECHANISM"`
+	Format                null.String        `json:"format" envconfig:"K6_KAFKA_FORMAT"`
+	PushInterval          types.NullDuration `json:"pushInterval" envconfig:"K6_KAFKA_PUSH_INTERVAL"`
+	Version               null.String        `json:"version" envconfig:"K6_KAFKA_VERSION"`
+	SSL                   null.Bool          `json:"ssl" envconfig:"K6_KAFKA_SSL"`
+	InsecureSkipTLSVerify null.Bool          `json:"insecureSkipTLSVerify" envconfig:"K6_KAFKA_INSECURE_SKIP_TLS_VERIFY"`
+	LogError              null.Bool          `json:"logError" envconfig:"K6_KAFKA_LOG_ERROR"`
 
 	InfluxDBConfig influxdbConfig `json:"influxdb"`
 }
@@ -68,21 +68,21 @@ type config struct {
 	InfluxDBConfig influxdbConfig `json:"influxdb" mapstructure:"influxdb"`
 	Version        string         `json:"version" mapstructure:"version"`
 	SSL            bool           `json:"ssl" mapstructure:"ssl"`
-	Insecure       bool           `json:"insecure" mapstructure:"insecure"`
+	Insecure       bool           `json:"insecureSkipTLSVerify" mapstructure:"insecure"`
 	LogError       bool           `json:"logError" mapstructure:"logError"`
 }
 
 // NewConfig creates a new Config instance with default values for some fields.
 func NewConfig() Config {
 	return Config{
-		Format:         null.StringFrom("json"),
-		PushInterval:   types.NullDurationFrom(1 * time.Second),
-		InfluxDBConfig: newInfluxdbConfig(),
-		AuthMechanism:  null.StringFrom("none"),
-		Version:        null.StringFrom(sarama.DefaultVersion.String()),
-		SSL:            null.BoolFrom(false),
-		Insecure:       null.BoolFrom(false),
-		LogError:       null.BoolFrom(true),
+		Format:                null.StringFrom("json"),
+		PushInterval:          types.NullDurationFrom(1 * time.Second),
+		InfluxDBConfig:        newInfluxdbConfig(),
+		AuthMechanism:         null.StringFrom("none"),
+		Version:               null.StringFrom(sarama.DefaultVersion.String()),
+		SSL:                   null.BoolFrom(false),
+		InsecureSkipTLSVerify: null.BoolFrom(false),
+		LogError:              null.BoolFrom(true),
 	}
 }
 
@@ -115,8 +115,8 @@ func (c Config) Apply(cfg Config) Config {
 		c.SSL = cfg.SSL
 	}
 
-	if cfg.Insecure.Valid {
-		c.Insecure = cfg.Insecure
+	if cfg.InsecureSkipTLSVerify.Valid {
+		c.InsecureSkipTLSVerify = cfg.InsecureSkipTLSVerify
 	}
 
 	if cfg.LogError.Valid {
@@ -164,8 +164,8 @@ func ParseArg(arg string) (Config, error) {
 		c.SSL = null.BoolFrom(v)
 	}
 
-	if v, ok := params["insecure"].(bool); ok {
-		c.Insecure = null.BoolFrom(v)
+	if v, ok := params["insecureSkipTLSVerify"].(bool); ok {
+		c.InsecureSkipTLSVerify = null.BoolFrom(v)
 	}
 
 	if v, ok := params["logError"].(bool); ok {

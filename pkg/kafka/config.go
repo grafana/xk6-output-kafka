@@ -23,6 +23,7 @@ package kafka
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/Shopify/sarama"
@@ -138,40 +139,51 @@ func ParseArg(arg string) (Config, error) {
 		if err != nil {
 			return c, err
 		}
+		delete(params, "pushInterval")
 	}
 
 	if v, ok := params["version"].(string); ok {
 		c.Version = null.StringFrom(v)
+		delete(params, "version")
 	}
 
 	if v, ok := params["ssl"].(bool); ok {
 		c.SSL = null.BoolFrom(v)
+		delete(params, "ssl")
 	}
 
 	if v, ok := params["insecureSkipTLSVerify"].(bool); ok {
 		c.InsecureSkipTLSVerify = null.BoolFrom(v)
+		delete(params, "insecureSkipTLSVerify")
 	}
 
 	if v, ok := params["logError"].(bool); ok {
 		c.LogError = null.BoolFrom(v)
+		delete(params, "logError")
 	}
 
 	if v, ok := params["authMechanism"].(string); ok {
 		c.AuthMechanism = null.StringFrom(v)
+		delete(params, "authMechanism")
 	}
 
 	if v, ok := params["user"].(string); ok {
 		c.User = null.StringFrom(v)
+		delete(params, "user")
 	}
 
 	if v, ok := params["password"].(string); ok {
 		c.Password = null.StringFrom(v)
+		delete(params, "password")
 	}
 	if v, ok := params["topic"].(string); ok {
 		c.Topic = null.StringFrom(v)
+		delete(params, "topic")
 	}
 	if v, ok := params["format"].(string); ok {
 		c.Format = null.StringFrom(v)
+
+		delete(params, "format")
 	}
 
 	var cfg config
@@ -182,7 +194,18 @@ func ParseArg(arg string) (Config, error) {
 	if err != nil {
 		return c, err
 	}
+	delete(params, "brokers")
+
 	c.Brokers = cfg.Brokers
+
+	if len(params) > 0 {
+		var s string
+		for k, v := range params {
+			s += fmt.Sprintf("%s=%v,", k, v)
+		}
+		s = s[:len(s)-1]
+		return c, errors.New("Unknown or unparsed options '" + s + "'")
+	}
 	return c, nil
 }
 

@@ -129,6 +129,14 @@ func TestConfigParseArg(t *testing.T) {
 	assert.Equal(t, null.StringFrom("SASL_PLAINTEXT"), c.AuthMechanism)
 	assert.Equal(t, null.StringFrom("johndoe"), c.User)
 	assert.Equal(t, null.BoolFrom(false), c.LogError)
+
+	c, err = ParseArg("badOption=212")
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), `Unknown or unparsed options 'badOption=212'`)
+
+	c, err = ParseArg("ssl=nottrue")
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), `Unknown or unparsed options 'ssl=nottrue'`)
 }
 
 func TestConsolidatedConfig(t *testing.T) {

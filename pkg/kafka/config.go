@@ -57,19 +57,9 @@ type Config struct {
 // config is a duplicate of ConfigFields as we can not mapstructure.Decode into
 // null types so we duplicate the struct with primitive types to Decode into
 type config struct {
-	Brokers       []string `json:"brokers" mapstructure:"brokers" envconfig:"K6_KAFKA_BROKERS"`
-	Topic         string   `json:"topic" mapstructure:"topic" envconfig:"K6_KAFKA_TOPIC"`
-	Format        string   `json:"format" mapstructure:"format" envconfig:"K6_KAFKA_FORMAT"`
-	PushInterval  string   `json:"pushInterval" mapstructure:"pushInterval" envconfig:"K6_KAFKA_PUSH_INTERVAL"`
-	User          string   `json:"user" mapstructure:"user" envconfig:"K6_KAFKA_SASL_USER"`
-	Password      string   `json:"password" mapstructure:"password" envconfig:"K6_KAFKA_SASL_PASSWORD"`
-	AuthMechanism string   `json:"authMechanism" mapstructure:"authMechanism" envconfig:"K6_KAFKA_AUTH_MECHANISM"`
-
-	InfluxDBConfig influxdbConfig `json:"influxdb" mapstructure:"influxdb"`
-	Version        string         `json:"version" mapstructure:"version"`
-	SSL            bool           `json:"ssl" mapstructure:"ssl"`
-	Insecure       bool           `json:"insecureSkipTLSVerify" mapstructure:"insecure"`
-	LogError       bool           `json:"logError" mapstructure:"logError"`
+	Brokers []string `json:"brokers" mapstructure:"brokers" envconfig:"K6_KAFKA_BROKERS"`
+	Topic   string   `json:"topic" mapstructure:"topic" envconfig:"K6_KAFKA_TOPIC"`
+	Format  string   `json:"format" mapstructure:"format" envconfig:"K6_KAFKA_FORMAT"`
 }
 
 // NewConfig creates a new Config instance with default values for some fields.

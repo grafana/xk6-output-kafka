@@ -83,7 +83,7 @@ func newProducer(config Config) (sarama.AsyncProducer, error) {
 		if config.SSL.Bool {
 			saramaConfig.Net.TLS.Enable = true
 			saramaConfig.Net.TLS.Config = &tls.Config{
-				InsecureSkipVerify: config.Insecure.Bool,
+				InsecureSkipVerify: config.InsecureSkipTLSVerify.Bool,
 				ClientAuth:         0,
 			}
 		}

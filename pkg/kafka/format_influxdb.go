@@ -21,14 +21,13 @@
 package kafka
 
 import (
+	"errors"
 	"fmt"
 	"strconv"
 	"strings"
 
 	client "github.com/influxdata/influxdb1-client/v2"
-	"github.com/mitchellh/mapstructure"
 	"github.com/sirupsen/logrus"
-	"go.k6.io/k6/lib/types"
 	"go.k6.io/k6/stats"
 )
 
@@ -172,18 +171,17 @@ func (c influxdbConfig) Apply(cfg influxdbConfig) influxdbConfig {
 func influxdbParseMap(m map[string]interface{}) (influxdbConfig, error) {
 	c := influxdbConfig{}
 	if v, ok := m["tagsAsFields"].(string); ok {
-		m["tagsAsFields"] = []string{v}
+		c.TagsAsFields = []string{v}
+		delete(m, "tagsAsFields")
 	}
-	dec, err := mapstructure.NewDecoder(&mapstructure.DecoderConfig{
-		DecodeHook: types.NullDecoder,
-		Result:     &c,
-	})
-	if err != nil {
-		return c, err
+	if v, ok := m["tagsAsFields"].([]interface{}); ok {
+		c.TagsAsFields = interfaceSliceToStringSlice(v)
+		delete(m, "tagsAsFields")
 	}
-
-	err = dec.Decode(m)
-	return c, err
+	if len(m) > 0 {
+		return c, errors.New("Unknown or unparsed options '" + mapToString(m) + "'")
+	}
+	return c, nil
 }
 
 type influxdbConfig struct {

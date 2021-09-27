@@ -129,6 +129,18 @@ func TestConfigParseArg(t *testing.T) {
 	assert.Equal(t, null.StringFrom("SASL_PLAINTEXT"), c.AuthMechanism)
 	assert.Equal(t, null.StringFrom("johndoe"), c.User)
 	assert.Equal(t, null.BoolFrom(false), c.LogError)
+
+	c, err = ParseArg("badOption=212")
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), `Unknown or unparsed options 'badOption=212'`)
+
+	c, err = ParseArg("ssl=nottrue")
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), `Unknown or unparsed options 'ssl=nottrue'`)
+
+	c, err = ParseArg("brokers={broker2,broker3:9092},topic=someTopic,format=influxdb,influxdb.tagsAsFields=fake,influxdb.something=else")
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), `Unknown or unparsed options 'something=else'`)
 }
 
 func TestConsolidatedConfig(t *testing.T) {
@@ -254,6 +266,25 @@ func TestConsolidatedConfig(t *testing.T) {
 				SSL:                   null.BoolFrom(false),
 				InsecureSkipTLSVerify: null.BoolFrom(false),
 				LogError:              null.BoolFrom(false),
+			},
+		},
+		"arg_over_env_with_brokers": {
+			env: map[string]string{
+				"K6_KAFKA_AUTH_MECHANISM": "none",
+				"K6_KAFKA_LOG_ERROR":      "false",
+				"K6_KAFKA_BROKERS":        "something",
+			},
+			arg: "logError=true",
+			config: Config{
+				Format:                null.StringFrom("json"),
+				PushInterval:          types.NullDurationFrom(1 * time.Second),
+				InfluxDBConfig:        newInfluxdbConfig(),
+				AuthMechanism:         null.StringFrom("none"),
+				Version:               null.StringFrom(sarama.DefaultVersion.String()),
+				SSL:                   null.BoolFrom(false),
+				InsecureSkipTLSVerify: null.BoolFrom(false),
+				LogError:              null.BoolFrom(true),
+				Brokers:               []string{"something"},
 			},
 		},
 	}

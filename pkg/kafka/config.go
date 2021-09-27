@@ -23,12 +23,12 @@ package kafka
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/Shopify/sarama"
 	"github.com/kelseyhightower/envconfig"
 	"github.com/kubernetes/helm/pkg/strvals"
-	"github.com/mitchellh/mapstructure"
 	"gopkg.in/guregu/null.v3"
 
 	"go.k6.io/k6/lib/types"
@@ -52,24 +52,6 @@ type Config struct {
 	LogError              null.Bool          `json:"logError" envconfig:"K6_KAFKA_LOG_ERROR"`
 
 	InfluxDBConfig influxdbConfig `json:"influxdb"`
-}
-
-// config is a duplicate of ConfigFields as we can not mapstructure.Decode into
-// null types so we duplicate the struct with primitive types to Decode into
-type config struct {
-	Brokers       []string `json:"brokers" mapstructure:"brokers" envconfig:"K6_KAFKA_BROKERS"`
-	Topic         string   `json:"topic" mapstructure:"topic" envconfig:"K6_KAFKA_TOPIC"`
-	Format        string   `json:"format" mapstructure:"format" envconfig:"K6_KAFKA_FORMAT"`
-	PushInterval  string   `json:"pushInterval" mapstructure:"pushInterval" envconfig:"K6_KAFKA_PUSH_INTERVAL"`
-	User          string   `json:"user" mapstructure:"user" envconfig:"K6_KAFKA_SASL_USER"`
-	Password      string   `json:"password" mapstructure:"password" envconfig:"K6_KAFKA_SASL_PASSWORD"`
-	AuthMechanism string   `json:"authMechanism" mapstructure:"authMechanism" envconfig:"K6_KAFKA_AUTH_MECHANISM"`
-
-	InfluxDBConfig influxdbConfig `json:"influxdb" mapstructure:"influxdb"`
-	Version        string         `json:"version" mapstructure:"version"`
-	SSL            bool           `json:"ssl" mapstructure:"ssl"`
-	Insecure       bool           `json:"insecureSkipTLSVerify" mapstructure:"insecure"`
-	LogError       bool           `json:"logError" mapstructure:"logError"`
 }
 
 // NewConfig creates a new Config instance with default values for some fields.
@@ -135,10 +117,6 @@ func ParseArg(arg string) (Config, error) {
 		return c, err
 	}
 
-	if v, ok := params["brokers"].(string); ok {
-		params["brokers"] = []string{v}
-	}
-
 	if v, ok := params["influxdb"].(map[string]interface{}); ok {
 		influxConfig, err := influxdbParseMap(v)
 		if err != nil {
@@ -154,47 +132,83 @@ func ParseArg(arg string) (Config, error) {
 		if err != nil {
 			return c, err
 		}
+		delete(params, "pushInterval")
 	}
 
 	if v, ok := params["version"].(string); ok {
 		c.Version = null.StringFrom(v)
+		delete(params, "version")
 	}
 
 	if v, ok := params["ssl"].(bool); ok {
 		c.SSL = null.BoolFrom(v)
+		delete(params, "ssl")
 	}
 
 	if v, ok := params["insecureSkipTLSVerify"].(bool); ok {
 		c.InsecureSkipTLSVerify = null.BoolFrom(v)
+		delete(params, "insecureSkipTLSVerify")
 	}
 
 	if v, ok := params["logError"].(bool); ok {
 		c.LogError = null.BoolFrom(v)
+		delete(params, "logError")
 	}
 
 	if v, ok := params["authMechanism"].(string); ok {
 		c.AuthMechanism = null.StringFrom(v)
+		delete(params, "authMechanism")
 	}
 
 	if v, ok := params["user"].(string); ok {
 		c.User = null.StringFrom(v)
+		delete(params, "user")
 	}
 
 	if v, ok := params["password"].(string); ok {
 		c.Password = null.StringFrom(v)
+		delete(params, "password")
+	}
+	if v, ok := params["topic"].(string); ok {
+		c.Topic = null.StringFrom(v)
+		delete(params, "topic")
+	}
+	if v, ok := params["format"].(string); ok {
+		c.Format = null.StringFrom(v)
+
+		delete(params, "format")
 	}
 
-	var cfg config
-	err = mapstructure.Decode(params, &cfg)
-	if err != nil {
-		return c, err
+	if v, ok := params["brokers"].(string); ok {
+		c.Brokers = []string{v}
+
+		delete(params, "brokers")
+	}
+	if v, ok := params["brokers"].([]interface{}); ok {
+		c.Brokers = interfaceSliceToStringSlice(v)
+		delete(params, "brokers")
 	}
 
-	c.Brokers = cfg.Brokers
-	c.Topic = null.StringFrom(cfg.Topic)
-	c.Format = null.StringFrom(cfg.Format)
-
+	if len(params) > 0 {
+		return c, errors.New("Unknown or unparsed options '" + mapToString(params) + "'")
+	}
 	return c, nil
+}
+
+func mapToString(m map[string]interface{}) string {
+	var s string
+	for k, v := range m {
+		s += fmt.Sprintf("%s=%v,", k, v)
+	}
+	return s[:len(s)-1]
+}
+
+func interfaceSliceToStringSlice(input []interface{}) []string {
+	output := make([]string, len(input))
+	for i, v := range input {
+		output[i] = fmt.Sprintf("%v", v)
+	}
+	return output
 }
 
 // GetConsolidatedConfig combines {default config values + JSON config +

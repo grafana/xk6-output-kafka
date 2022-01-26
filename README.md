@@ -1,5 +1,5 @@
 # xk6-output-kafka
-Is extracted the original [kafka output](https://k6.io/docs/results-visualization/apache-kafka) from [k6](https://github.com/k6io/k6) so it can be used with [xk6](https://github.com/k6io/xk6).
+Is extracted the original [kafka output](https://k6.io/docs/results-visualization/apache-kafka) from [k6](https://github.com/grafana/k6) so it can be used with [xk6](https://github.com/grafana/xk6).
 
 </div>
 
@@ -13,7 +13,7 @@ To build a `k6` binary with this extension, first ensure you have the prerequisi
 1. Build with `xk6`:
 
 ```bash
-xk6 build --with github.com/k6io/xk6-output-kafka
+xk6 build --with github.com/grafana/xk6-output-kafka
 ```
 
 This will result in a `k6` binary in the current directory.

@@ -1,4 +1,4 @@
-module github.com/knmsk/xk6-output-kafka
+module github.com/grafana/xk6-output-kafka
 
 go 1.17
 

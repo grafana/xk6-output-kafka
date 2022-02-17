@@ -160,7 +160,7 @@ func (o *Output) batchFromBufferedSamples(bufferedSamples []stats.SampleContaine
 }
 
 func (o *Output) formatSamples(samples stats.Samples) ([]string, error) {
-	var metrics []string
+	metrics := make([]string, len(samples))
 
 	switch o.Config.Format.String {
 	case "influxdb":
@@ -174,13 +174,13 @@ func (o *Output) formatSamples(samples stats.Samples) ([]string, error) {
 			return nil, err
 		}
 	default:
-		for _, sample := range samples {
-			metric, err := json.Marshal(wrapSample(sample))
+		for i, sample := range samples {
+			metric, err := json.Marshal(wrapSample(&sample))
 			if err != nil {
 				return nil, err
 			}
 
-			metrics = append(metrics, string(metric))
+			metrics[i] = string(metric)
 		}
 	}
 

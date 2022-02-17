@@ -28,7 +28,7 @@ import (
 
 // wrapSample is used to package a metric sample in a way that's nice to export
 // to JSON.
-func wrapSample(sample stats.Sample) envolope {
+func wrapSample(sample *stats.Sample) envolope {
 	return envolope{
 		Type:   "Point",
 		Metric: sample.Metric.Name,
@@ -51,7 +51,7 @@ type jsonSample struct {
 	Tags  *stats.SampleTags `json:"tags"`
 }
 
-func newJSONSample(sample stats.Sample) jsonSample {
+func newJSONSample(sample *stats.Sample) jsonSample {
 	return jsonSample{
 		Time:  sample.Time,
 		Value: sample.Value,

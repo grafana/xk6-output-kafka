@@ -28,21 +28,21 @@ import (
 
 	client "github.com/influxdata/influxdb1-client/v2"
 	"github.com/sirupsen/logrus"
-	"go.k6.io/k6/stats"
+	"go.k6.io/k6/metrics"
 )
 
 type extractTagsToValuesFunc func(map[string]string, map[string]interface{}) map[string]interface{}
 
 // format returns a string array of metrics in influx line-protocol
 func formatAsInfluxdbV1(
-	logger logrus.FieldLogger, samples []stats.Sample, extractTagsToValues extractTagsToValuesFunc,
+	logger logrus.FieldLogger, samples []metrics.Sample, extractTagsToValues extractTagsToValuesFunc,
 ) ([]string, error) {
-	var metrics []string
+	var m []string
 	type cacheItem struct {
 		tags   map[string]string
 		values map[string]interface{}
 	}
-	cache := map[*stats.SampleTags]cacheItem{}
+	cache := map[*metrics.SampleTags]cacheItem{}
 	for _, sample := range samples {
 		var tags map[string]string
 		values := make(map[string]interface{})
@@ -67,10 +67,10 @@ func formatAsInfluxdbV1(
 			logger.WithError(err).Error("InfluxDB: Couldn't make point from sample!")
 			return nil, err
 		}
-		metrics = append(metrics, p.String())
+		m = append(m, p.String())
 	}
 
-	return metrics, nil
+	return m, nil
 }
 
 // FieldKind defines Enum for tag-to-field type conversion

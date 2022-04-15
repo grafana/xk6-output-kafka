@@ -23,12 +23,12 @@ package kafka
 import (
 	"time"
 
-	"go.k6.io/k6/stats"
+	"go.k6.io/k6/metrics"
 )
 
 // wrapSample is used to package a metric sample in a way that's nice to export
 // to JSON.
-func wrapSample(sample stats.Sample) envolope {
+func wrapSample(sample metrics.Sample) envolope {
 	return envolope{
 		Type:   "Point",
 		Metric: sample.Metric.Name,
@@ -48,10 +48,10 @@ type envolope struct {
 type jsonSample struct {
 	Time  time.Time         `json:"time"`
 	Value float64           `json:"value"`
-	Tags  *stats.SampleTags `json:"tags"`
+	Tags  *metrics.SampleTags `json:"tags"`
 }
 
-func newJSONSample(sample stats.Sample) jsonSample {
+func newJSONSample(sample metrics.Sample) jsonSample {
 	return jsonSample{
 		Time:  sample.Time,
 		Value: sample.Value,

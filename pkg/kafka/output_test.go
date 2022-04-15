@@ -30,8 +30,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.k6.io/k6/lib/testutils"
+	"go.k6.io/k6/metrics"
 	"go.k6.io/k6/output"
-	"go.k6.io/k6/stats"
 	"gopkg.in/guregu/null.v3"
 )
 
@@ -58,10 +58,13 @@ func TestRun(t *testing.T) {
 
 func TestFormatSample(t *testing.T) {
 	o := Output{}
-	metric := stats.New("my_metric", stats.Gauge)
-	samples := stats.Samples{
-		{Metric: metric, Value: 1.25, Tags: stats.IntoSampleTags(&map[string]string{"a": "1"})},
-		{Metric: metric, Value: 2, Tags: stats.IntoSampleTags(&map[string]string{"b": "2"})},
+	registry := metrics.NewRegistry()
+
+	metric, err := registry.NewMetric("my_metric", metrics.Gauge)
+	require.NoError(t, err)
+	samples := metrics.Samples{
+		{Metric: metric, Value: 1.25, Tags: metrics.IntoSampleTags(&map[string]string{"a": "1"})},
+		{Metric: metric, Value: 2, Tags: metrics.IntoSampleTags(&map[string]string{"b": "2"})},
 	}
 
 	o.Config.Format = null.NewString("influxdb", false)

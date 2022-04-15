@@ -30,7 +30,7 @@ import (
 	"github.com/Shopify/sarama"
 	"github.com/sirupsen/logrus"
 	"go.k6.io/k6/output"
-	"go.k6.io/k6/stats"
+	"go.k6.io/k6/metrics"
 )
 
 const flushPeriod = 1 * time.Second
@@ -146,7 +146,7 @@ func (o *Output) Stop() error {
 	return nil
 }
 
-func (o *Output) batchFromBufferedSamples(bufferedSamples []stats.SampleContainer) ([]string, error) {
+func (o *Output) batchFromBufferedSamples(bufferedSamples []metrics.SampleContainer) ([]string, error) {
 	var formattedSamples []string
 	for _, bufferedSample := range bufferedSamples {
 		samples := bufferedSample.GetSamples()
@@ -159,7 +159,7 @@ func (o *Output) batchFromBufferedSamples(bufferedSamples []stats.SampleContaine
 	return formattedSamples, nil
 }
 
-func (o *Output) formatSamples(samples stats.Samples) ([]string, error) {
+func (o *Output) formatSamples(samples metrics.Samples) ([]string, error) {
 	var metrics []string
 
 	switch o.Config.Format.String {

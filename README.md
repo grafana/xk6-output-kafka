@@ -59,5 +59,6 @@ $ k6 --out xk6-kafka=brokers=someBroker,topic=someTopic,format=influxdb,influxdb
 
 ## See also
 
+- [k6 Kafka Documentation](https://k6.io/docs/results-output/real-time/apache-kafka/)
 - [Integrating k6 with Apache Kafka](https://k6.io/blog/integrating-k6-with-apache-kafka)
 

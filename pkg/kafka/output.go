@@ -29,8 +29,8 @@ import (
 
 	"github.com/Shopify/sarama"
 	"github.com/sirupsen/logrus"
-	"go.k6.io/k6/output"
 	"go.k6.io/k6/metrics"
+	"go.k6.io/k6/output"
 )
 
 const flushPeriod = 1 * time.Second

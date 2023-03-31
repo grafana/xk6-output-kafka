@@ -62,9 +62,25 @@ func TestFormatSample(t *testing.T) {
 
 	metric, err := registry.NewMetric("my_metric", metrics.Gauge)
 	require.NoError(t, err)
-	samples := metrics.Samples{
-		{Metric: metric, Value: 1.25, Tags: metrics.IntoSampleTags(&map[string]string{"a": "1"})},
-		{Metric: metric, Value: 2, Tags: metrics.IntoSampleTags(&map[string]string{"b": "2"})},
+
+	samples := make(metrics.Samples, 2)
+	samples[0] = metrics.Sample{
+		TimeSeries: metrics.TimeSeries{
+			Metric: metric,
+			Tags: registry.RootTagSet().WithTagsFromMap(map[string]string{
+				"a": "1",
+			}),
+		},
+		Value: 1.25,
+	}
+	samples[1] = metrics.Sample{
+		TimeSeries: metrics.TimeSeries{
+			Metric: metric,
+			Tags: registry.RootTagSet().WithTagsFromMap(map[string]string{
+				"b": "2",
+			}),
+		},
+		Value: 2,
 	}
 
 	o.Config.Format = null.NewString("influxdb", false)

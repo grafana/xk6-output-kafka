@@ -46,9 +46,9 @@ type envolope struct {
 
 // jsonSample is the data format for metric sample data in the JSON file.
 type jsonSample struct {
-	Time  time.Time         `json:"time"`
-	Value float64           `json:"value"`
-	Tags  *metrics.SampleTags `json:"tags"`
+	Time  time.Time       `json:"time"`
+	Value float64         `json:"value"`
+	Tags  *metrics.TagSet `json:"tags"`
 }
 
 func newJSONSample(sample metrics.Sample) jsonSample {

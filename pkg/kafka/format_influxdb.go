@@ -42,7 +42,7 @@ func formatAsInfluxdbV1(
 		tags   map[string]string
 		values map[string]interface{}
 	}
-	cache := map[*metrics.SampleTags]cacheItem{}
+	cache := map[*metrics.TagSet]cacheItem{}
 	for _, sample := range samples {
 		var tags map[string]string
 		values := make(map[string]interface{})
@@ -52,7 +52,7 @@ func formatAsInfluxdbV1(
 				values[k] = v
 			}
 		} else {
-			tags = sample.Tags.CloneTags()
+			tags = sample.Tags.Map()
 			extractTagsToValues(tags, values)
 			cache[sample.Tags] = cacheItem{tags, values}
 		}

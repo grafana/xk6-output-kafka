@@ -37,7 +37,7 @@ type extractTagsToValuesFunc func(map[string]string, map[string]interface{}) map
 func formatAsInfluxdbV1(
 	logger logrus.FieldLogger, samples []metrics.Sample, extractTagsToValues extractTagsToValuesFunc,
 ) ([]string, error) {
-	var m []string
+	m := make([]string, 0)
 	type cacheItem struct {
 		tags   map[string]string
 		values map[string]interface{}
@@ -145,7 +145,7 @@ func makeInfluxdbFieldKinds(tagsAsFields []string) (map[string]FieldKind, error)
 		case "int":
 			fieldKinds[fieldName] = Int
 		default:
-			return nil, fmt.Errorf("An invalid type (%s) is specified for an InfluxDB field (%s).",
+			return nil, fmt.Errorf("invalid type (%s) specified for InfluxDB field (%s)",
 				fieldType, fieldName)
 		}
 	}
@@ -155,7 +155,7 @@ func makeInfluxdbFieldKinds(tagsAsFields []string) (map[string]FieldKind, error)
 
 func checkDuplicatedTypeDefinitions(fieldKinds map[string]FieldKind, tag string) error {
 	if _, found := fieldKinds[tag]; found {
-		return fmt.Errorf("A tag name (%s) shows up more than once in InfluxDB field type configurations.", tag)
+		return fmt.Errorf("tag name (%s) shows up more than once in InfluxDB field type configurations", tag)
 	}
 	return nil
 }

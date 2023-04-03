@@ -1,3 +1,4 @@
+// Package kafka registers the xk6-output-kafka extension
 package kafka
 
 import (
@@ -6,7 +7,5 @@ import (
 )
 
 func init() {
-	output.RegisterExtension("xk6-kafka", func(p output.Params) (output.Output, error) {
-		return kafka.New(p)
-	})
+	output.RegisterExtension("xk6-kafka", kafka.New)
 }

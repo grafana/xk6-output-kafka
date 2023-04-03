@@ -9,8 +9,6 @@ To build a `k6` binary with this extension, first ensure you have the prerequisi
 - [Go toolchain](https://go101.org/article/go-toolchain.html)
 - Git
 
-> :point_up:
-
 1. Build with `xk6`:
 
 ```bash

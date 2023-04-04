@@ -48,13 +48,13 @@ type envolope struct {
 type jsonSample struct {
 	Time  time.Time         `json:"time"`
 	Value float64           `json:"value"`
-	Tags  *metrics.SampleTags `json:"tags"`
+	Tags  map[string]string `json:"tags"`
 }
 
 func newJSONSample(sample metrics.Sample) jsonSample {
 	return jsonSample{
 		Time:  sample.Time,
 		Value: sample.Value,
-		Tags:  sample.Tags,
+		Tags:  sample.Tags.Map(),
 	}
 }

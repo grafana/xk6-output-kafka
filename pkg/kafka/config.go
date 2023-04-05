@@ -26,8 +26,9 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/mstoykov/envconfig"
+
 	"github.com/Shopify/sarama"
-	"github.com/kelseyhightower/envconfig"
 	"github.com/kubernetes/helm/pkg/strvals"
 	"gopkg.in/guregu/null.v3"
 
@@ -68,6 +69,7 @@ func NewConfig() Config {
 	}
 }
 
+// Apply merges applied Config into base.
 func (c Config) Apply(cfg Config) Config {
 	if len(cfg.Brokers) > 0 {
 		c.Brokers = cfg.Brokers
@@ -124,7 +126,6 @@ func ParseArg(arg string) (Config, error) {
 		}
 		c.InfluxDBConfig = c.InfluxDBConfig.Apply(influxConfig)
 	}
-
 	delete(params, "influxdb")
 
 	if v, ok := params["pushInterval"].(string); ok {
@@ -134,37 +135,30 @@ func ParseArg(arg string) (Config, error) {
 		}
 		delete(params, "pushInterval")
 	}
-
 	if v, ok := params["version"].(string); ok {
 		c.Version = null.StringFrom(v)
 		delete(params, "version")
 	}
-
 	if v, ok := params["ssl"].(bool); ok {
 		c.SSL = null.BoolFrom(v)
 		delete(params, "ssl")
 	}
-
 	if v, ok := params["insecureSkipTLSVerify"].(bool); ok {
 		c.InsecureSkipTLSVerify = null.BoolFrom(v)
 		delete(params, "insecureSkipTLSVerify")
 	}
-
 	if v, ok := params["logError"].(bool); ok {
 		c.LogError = null.BoolFrom(v)
 		delete(params, "logError")
 	}
-
 	if v, ok := params["authMechanism"].(string); ok {
 		c.AuthMechanism = null.StringFrom(v)
 		delete(params, "authMechanism")
 	}
-
 	if v, ok := params["user"].(string); ok {
 		c.User = null.StringFrom(v)
 		delete(params, "user")
 	}
-
 	if v, ok := params["password"].(string); ok {
 		c.Password = null.StringFrom(v)
 		delete(params, "password")
@@ -178,7 +172,6 @@ func ParseArg(arg string) (Config, error) {
 
 		delete(params, "format")
 	}
-
 	if v, ok := params["brokers"].(string); ok {
 		c.Brokers = []string{v}
 
@@ -224,8 +217,10 @@ func GetConsolidatedConfig(jsonRawConf json.RawMessage, env map[string]string, a
 	}
 
 	envConfig := Config{}
-	if err := envconfig.Process("", &envConfig); err != nil {
-		// TODO: get rid of envconfig and actually use the env parameter...
+	if err := envconfig.Process("", &envConfig, func(key string) (string, bool) {
+		v, ok := env[key]
+		return v, ok
+	}); err != nil {
 		return result, err
 	}
 

@@ -18,9 +18,12 @@
  *
  */
 
+// Package kafka sends real-time testing metrics to an Apache Kafka message broker
 package kafka
 
 import (
+	"crypto/sha256"
+	"crypto/sha512"
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
@@ -35,6 +38,7 @@ import (
 
 const flushPeriod = 1 * time.Second
 
+// Output is a k6 output that sends metrics to a Kafka broker.
 type Output struct {
 	output.SampleBuffer
 
@@ -47,6 +51,7 @@ type Output struct {
 	errorsWg sync.WaitGroup
 }
 
+// New creates a new instance of the output.
 func New(params output.Params) (output.Output, error) {
 	return newOutput(params)
 }
@@ -82,6 +87,7 @@ func newProducer(config Config) (sarama.AsyncProducer, error) {
 		saramaConfig.Net.SASL.Password = config.Password.String
 		if config.SSL.Bool {
 			saramaConfig.Net.TLS.Enable = true
+			// #nosec G402
 			saramaConfig.Net.TLS.Config = &tls.Config{
 				InsecureSkipVerify: config.InsecureSkipTLSVerify.Bool,
 				ClientAuth:         0,
@@ -92,10 +98,14 @@ func newProducer(config Config) (sarama.AsyncProducer, error) {
 			saramaConfig.Net.SASL.Mechanism = sarama.SASLTypePlaintext
 		case "scram-sha-512":
 			saramaConfig.Net.SASL.Mechanism = sarama.SASLTypeSCRAMSHA512
-			saramaConfig.Net.SASL.SCRAMClientGeneratorFunc = func() sarama.SCRAMClient { return &xDGSCRAMClient{HashGeneratorFcn: SHA512} }
+			saramaConfig.Net.SASL.SCRAMClientGeneratorFunc = func() sarama.SCRAMClient {
+				return &xDGSCRAMClient{HashGeneratorFcn: sha512.New}
+			}
 		case "scram-sha-256":
 			saramaConfig.Net.SASL.Mechanism = sarama.SASLTypeSCRAMSHA256
-			saramaConfig.Net.SASL.SCRAMClientGeneratorFunc = func() sarama.SCRAMClient { return &xDGSCRAMClient{HashGeneratorFcn: SHA256} }
+			saramaConfig.Net.SASL.SCRAMClientGeneratorFunc = func() sarama.SCRAMClient {
+				return &xDGSCRAMClient{HashGeneratorFcn: sha256.New}
+			}
 		}
 	}
 
@@ -109,10 +119,12 @@ func newProducer(config Config) (sarama.AsyncProducer, error) {
 	return sarama.NewAsyncProducer(config.Brokers, saramaConfig)
 }
 
+// Description returns a short human-readable description of the output.
 func (o *Output) Description() string {
 	return fmt.Sprintf("xk6-Kafka: Kafka Async output on topic %v", o.Config.Topic.String)
 }
 
+// Start initializes the output.
 func (o *Output) Start() error {
 	// TODO get the period on the config
 	periodicFlusher, err := output.NewPeriodicFlusher(flushPeriod, o.flushMetrics)
@@ -136,6 +148,7 @@ func (o *Output) Start() error {
 	return nil
 }
 
+// Stop stops the output.
 func (o *Output) Stop() error {
 	o.logger.Debug("Kafka: Stopping...")
 	defer o.logger.Debug("Kafka: Stopped!")

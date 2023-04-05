@@ -22,7 +22,6 @@ package kafka
 
 import (
 	"encoding/json"
-	"os"
 	"testing"
 	"time"
 
@@ -35,6 +34,7 @@ import (
 )
 
 func TestConfigParseArg(t *testing.T) {
+	t.Parallel()
 	c, err := ParseArg("brokers=broker1,topic=someTopic,format=influxdb")
 	expInfluxConfig := influxdbConfig{}
 	assert.Nil(t, err)
@@ -130,15 +130,15 @@ func TestConfigParseArg(t *testing.T) {
 	assert.Equal(t, null.StringFrom("johndoe"), c.User)
 	assert.Equal(t, null.BoolFrom(false), c.LogError)
 
-	c, err = ParseArg("badOption=212")
+	_, err = ParseArg("badOption=212")
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), `Unknown or unparsed options 'badOption=212'`)
 
-	c, err = ParseArg("ssl=nottrue")
+	_, err = ParseArg("ssl=nottrue")
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), `Unknown or unparsed options 'ssl=nottrue'`)
 
-	c, err = ParseArg("brokers={broker2,broker3:9092},topic=someTopic,format=influxdb,influxdb.tagsAsFields=fake,influxdb.something=else")
+	_, err = ParseArg("brokers={broker2,broker3:9092},topic=someTopic,format=influxdb,influxdb.tagsAsFields=fake,influxdb.something=else")
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), `Unknown or unparsed options 'something=else'`)
 }
@@ -292,12 +292,7 @@ func TestConsolidatedConfig(t *testing.T) {
 	for name, testCase := range testCases {
 		testCase := testCase
 		t.Run(name, func(t *testing.T) {
-			// hacks around env not actually being taken into account
-			os.Clearenv()
-			defer os.Clearenv()
-			for k, v := range testCase.env {
-				require.NoError(t, os.Setenv(k, v))
-			}
+			t.Parallel()
 
 			config, err := GetConsolidatedConfig(testCase.jsonRaw, testCase.env, testCase.arg)
 			if testCase.err != "" {

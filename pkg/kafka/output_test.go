@@ -23,7 +23,6 @@ package kafka
 import (
 	"encoding/json"
 	"fmt"
-	"os"
 	"testing"
 
 	"github.com/Shopify/sarama"
@@ -36,14 +35,13 @@ import (
 )
 
 func TestRun(t *testing.T) {
+	t.Parallel()
 	broker := sarama.NewMockBroker(t, 1)
 	coordinator := sarama.NewMockBroker(t, 2)
 	seedMeta := new(sarama.MetadataResponse)
 	seedMeta.AddBroker(coordinator.Addr(), coordinator.BrokerID())
 	seedMeta.AddTopicPartition("my_topic", 0, 1, []int32{}, []int32{}, []int32{}, sarama.ErrNoError)
 	broker.Returns(seedMeta)
-
-	os.Clearenv()
 
 	c, err := New(output.Params{
 		Logger:     testutils.NewLogger(t),
@@ -57,6 +55,7 @@ func TestRun(t *testing.T) {
 }
 
 func TestFormatSample(t *testing.T) {
+	t.Parallel()
 	o := Output{}
 	registry := metrics.NewRegistry()
 

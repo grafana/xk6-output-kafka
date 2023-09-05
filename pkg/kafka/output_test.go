@@ -90,9 +90,11 @@ func TestFormatSample(t *testing.T) {
 
 	o.Config.Format = null.NewString("json", false)
 	formattedSamples, err = o.formatSamples(samples)
+	
+	gaugeMetric := metrics.Gauge.String()
 
-	expJSON1 := "{\"type\":\"Point\",\"data\":{\"time\":\"0001-01-01T00:00:00Z\",\"value\":1.25,\"tags\":{\"a\":\"1\"}},\"metric\":\"my_metric\"}"
-	expJSON2 := "{\"type\":\"Point\",\"data\":{\"time\":\"0001-01-01T00:00:00Z\",\"value\":2,\"tags\":{\"b\":\"2\"}},\"metric\":\"my_metric\"}"
+	expJSON1 := "{\"type\":\"" + gaugeMetric + "\",\"data\":{\"time\":\"0001-01-01T00:00:00Z\",\"value\":1.25,\"tags\":{\"a\":\"1\"}},\"metric\":\"my_metric\"}"
+	expJSON2 := "{\"type\":\"" + gaugeMetric + "\",\"data\":{\"time\":\"0001-01-01T00:00:00Z\",\"value\":2,\"tags\":{\"b\":\"2\"}},\"metric\":\"my_metric\"}"
 
 	assert.Nil(t, err)
 	assert.Equal(t, []string{expJSON1, expJSON2}, formattedSamples)

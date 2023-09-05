@@ -30,7 +30,7 @@ import (
 // to JSON.
 func wrapSample(sample metrics.Sample) envelope {
 	return envelope{
-		Type:   "Point",
+		Type:   sample.Metric.Type.String(),
 		Metric: sample.Metric.Name,
 		Data:   newJSONSample(sample),
 	}

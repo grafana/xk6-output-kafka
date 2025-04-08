@@ -172,8 +172,35 @@ func (o *Output) batchFromBufferedSamples(bufferedSamples []metrics.SampleContai
 	return formattedSamples, nil
 }
 
+var allowedMetrics = map[string]struct{} {
+    "http_reqs":         {},
+    "http_req_duration": {},
+    "data_sent":         {},
+    "data_received":     {},
+    "vus":               {},
+}
+
+var allowedMetricsCount = len(allowedMetrics) // presumably one metric of each type in a samples batch
+
+func isAllowedMetric(metricName string) bool {
+    _, exists := allowedMetrics[metricName]
+    return exists
+}
+
+func filterSamplesByMetricNames(samples metrics.Samples) metric.Samples {
+    filteredSamples := make(metrics.Samples, 0, allowedMetricsCount)
+    for _, sample := range samples {
+        if isAllowedMetric(sample.Metric.Name) {
+            filteredSamples = append(filteredSamples, sample)
+        }
+    }
+    return filteredSamples
+}
+
 func (o *Output) formatSamples(samples metrics.Samples) ([]string, error) {
 	var metrics []string
+
+	filteredSamples := filterSamplesByMetricNames(samples)
 
 	switch o.Config.Format.String {
 	case "influxdb":
@@ -182,12 +209,12 @@ func (o *Output) formatSamples(samples metrics.Samples) ([]string, error) {
 		if err != nil {
 			return nil, err
 		}
-		metrics, err = formatAsInfluxdbV1(o.logger, samples, newExtractTagsFields(fieldKinds))
+		metrics, err = formatAsInfluxdbV1(o.logger, filteredSamples, newExtractTagsFields(fieldKinds))
 		if err != nil {
 			return nil, err
 		}
 	default:
-		for _, sample := range samples {
+		for _, sample := range filteredSamples {
 			metric, err := json.Marshal(wrapSample(sample))
 			if err != nil {
 				return nil, err

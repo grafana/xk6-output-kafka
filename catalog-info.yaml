@@ -6,7 +6,6 @@ metadata:
   description: |
     k6 extension to output real-time test metrics to a Kafka topic.
   annotations:
-    backstage.io/techdocs-ref: dir:.
     github.com/project-slug: grafana/xk6-output-kafka
 spec:
   type: library

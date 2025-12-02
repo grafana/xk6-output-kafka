@@ -2,7 +2,7 @@ version: '3.9'
 
 services:
   lensesio:
-    image: lensesio/fast-data-dev:latest
+    image: lensesio/fast-data-dev:latest@sha256:2ab0403a731d35f281069c385431411940c979c81611c84a2dca9c37067456cf
     ports:
       - "2181:2181"
       - "3030:3030"

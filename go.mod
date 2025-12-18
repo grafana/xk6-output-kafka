@@ -10,7 +10,7 @@ require (
 	github.com/sirupsen/logrus v1.9.0
 	github.com/stretchr/testify v1.8.2
 	github.com/xdg/scram v1.0.5
-	go.k6.io/k6 v0.45.1
+	go.k6.io/k6 v0.59.0
 	gopkg.in/guregu/null.v3 v3.5.0
 )
 

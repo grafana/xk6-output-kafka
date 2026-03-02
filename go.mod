@@ -3,7 +3,7 @@ module github.com/grafana/xk6-output-kafka
 go 1.19
 
 require (
-	github.com/Shopify/sarama v1.38.1
+	github.com/Shopify/sarama v1.47.0
 	github.com/influxdata/influxdb1-client v0.0.0-20220302092344-a9ab5670611c
 	github.com/kubernetes/helm v2.17.0+incompatible
 	github.com/mstoykov/envconfig v1.4.1-0.20220114105314-765c6d8c76f1
